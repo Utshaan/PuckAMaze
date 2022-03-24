@@ -1,0 +1,105 @@
+import pygame, pymunk
+import os
+import random
+
+pygame.init()
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+WIDTH, HEIGHT = 600, 500
+SWIDTH, SHEIGHT = 700, 515
+screen = pygame.display.set_mode((SWIDTH, SHEIGHT), pygame.RESIZABLE)
+
+colours = dict(
+    black=(0, 0, 0),
+    light_orange=(236, 134, 87),
+    perk_green=(155, 255, 0),
+    turquoise=(12, 126, 158),
+    dark_grey=(23, 23, 23),
+    dark_teal=(14, 120, 120),
+)
+
+InGame_FONT = pygame.font.SysFont("couriernew", 50)
+DISPLAY_FONT = pygame.font.Font(os.path.join("Assets", "PAC-FONT.TTF"), 80)
+game_name_blink = DISPLAY_FONT.render("Mr.Pacman", 1, colours["black"])
+game_name = DISPLAY_FONT.render("Mr.Pacman", 1, colours["light_orange"])
+game_name_width, game_name_height = game_name.get_width(), game_name.get_height()
+dis_level_1 = InGame_FONT.render("Level - 1", 1, colours["perk_green"])
+dis_level_2 = InGame_FONT.render("Level - 2", 1, colours["perk_green"])
+background = pygame.transform.scale(
+    pygame.image.load(os.path.join("Assets", "map.jpg")), (SWIDTH, SHEIGHT)
+)
+icon = pygame.image.load(os.path.join("Assets", "icon.png"))
+not_background_shadow = pygame.Rect(0, 0, WIDTH, dis_level_1.get_height())
+
+pacman_left = pygame.transform.rotate(
+    pygame.transform.scale(
+        pygame.image.load(os.path.join("Assets", "pacman.png")), (673 / 20, 721 / 20)
+    ),
+    180,
+)
+pacman_down = pygame.transform.rotate(
+    pygame.transform.scale(
+        pygame.image.load(os.path.join("Assets", "pacman.png")), (673 / 20, 721 / 20)
+    ),
+    270,
+)
+pacman_right = pygame.transform.rotate(
+    pygame.transform.scale(
+        pygame.image.load(os.path.join("Assets", "pacman.png")), (673 / 20, 721 / 20)
+    ),
+    0,
+)
+pacman_up = pygame.transform.rotate(
+    pygame.transform.scale(
+        pygame.image.load(os.path.join("Assets", "pacman.png")), (673 / 20, 721 / 20)
+    ),
+    90,
+)
+pac_close = pygame.transform.scale(
+    pygame.image.load(os.path.join("Assets", "pacman_close.png")), (673 / 20, 721 / 20)
+)
+pac_close_R = pygame.transform.scale(
+    pygame.image.load(os.path.join("Assets", "pacman_close_R.png")),
+    (673 / 20, 721 / 20),
+)
+pac_last = pacman_right
+pellet_image = pygame.image.load(os.path.join("Assets", "pellet.png")).convert_alpha()
+pacman_init_image = pygame.transform.rotate(
+    pygame.transform.scale(
+        pygame.image.load(os.path.join("Assets", "pacman.png")), (637 / 10, 721 / 10)
+    ),
+    180,
+)
+pacman_init_close = pygame.transform.rotate(
+    pygame.transform.scale(
+        pygame.image.load(os.path.join("Assets", "pacman_close.png")),
+        (637 / 10, 721 / 10),
+    ),
+    180,
+)
+
+num_pel_row_column = 7
+
+pacman_group = pygame.sprite.GroupSingle()
+current_display = pygame.sprite.GroupSingle()
+pellet_group = pygame.sprite.Group()
+visible_obstacles = pygame.sprite.Group()
+visible_obstacles_2 = pygame.sprite.Group()
+
+walls_type = dict(
+    vertical=(3, ((HEIGHT-dis_level_1.get_height()) / num_pel_row_column)+3),
+    horizontal=((WIDTH / num_pel_row_column)+3, 3),
+)
+
+shuffle_list = (' ',' ',' ',' ','v','h','b')
+
+map_level_1 = [
+    list(' v v v '),
+    list(' vv  h '),
+    list('  hvhh '),
+    list(' v   bv'),
+    list('h bvb v'),
+    list('  v  h '),
+    list(' h b v '),
+]
+
+# test_map = []
