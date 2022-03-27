@@ -1,6 +1,5 @@
-import pygame, pymunk
+import pygame
 import os
-import random
 
 pygame.init()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -22,13 +21,12 @@ DISPLAY_FONT = pygame.font.Font(os.path.join("Assets", "PAC-FONT.TTF"), 80)
 game_name_blink = DISPLAY_FONT.render("Mr.Pacman", 1, colours["black"])
 game_name = DISPLAY_FONT.render("Mr.Pacman", 1, colours["light_orange"])
 game_name_width, game_name_height = game_name.get_width(), game_name.get_height()
-dis_level_1 = InGame_FONT.render("Level - 1", 1, colours["perk_green"])
-dis_level_2 = InGame_FONT.render("Level - 2", 1, colours["perk_green"])
+dis_level = InGame_FONT.render(f"Level - 1", 1, colours["perk_green"])
 background = pygame.transform.scale(
     pygame.image.load(os.path.join("Assets", "map.jpg")), (SWIDTH, SHEIGHT)
 )
 icon = pygame.image.load(os.path.join("Assets", "icon.png"))
-not_background_shadow = pygame.Rect(0, 0, WIDTH, dis_level_1.get_height())
+not_background_shadow = pygame.Rect(0, 0, WIDTH, dis_level.get_height())
 
 pacman_left = pygame.transform.rotate(
     pygame.transform.scale(
@@ -86,7 +84,7 @@ visible_obstacles = pygame.sprite.Group()
 visible_obstacles_2 = pygame.sprite.Group()
 
 walls_type = dict(
-    vertical=(3, ((HEIGHT-dis_level_1.get_height()) / num_pel_row_column)+3),
+    vertical=(3, ((HEIGHT-dis_level.get_height()) / num_pel_row_column)+3),
     horizontal=((WIDTH / num_pel_row_column)+3, 3),
 )
 

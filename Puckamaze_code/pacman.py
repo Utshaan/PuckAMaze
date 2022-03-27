@@ -2,6 +2,7 @@ import pygame
 from itertools import product
 import os
 from time import sleep
+import random
 from screen import *
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -16,8 +17,8 @@ def setit(number: int) -> None:
     for i, j in product(range(number), repeat=2):
         PowerPellets(
             (2 * i + 1) * WIDTH // (2 * number),
-            dis_level_1.get_height()
-            + ((2 * j + 1) * (HEIGHT - dis_level_1.get_height()) // (number * 2)),
+            dis_level.get_height()
+            + ((2 * j + 1) * (HEIGHT - dis_level.get_height()) // (number * 2)),
             pellet_group,
         )
 
@@ -78,8 +79,8 @@ class Pacman(pygame.sprite.Sprite):
         elif scene == "level 1":
             if self.temp_switch:
                 self.temp_switch = False
-                self.condition((WIDTH, dis_level_1.get_height(), SWIDTH, SHEIGHT))
-                self.rect.topleft = (WIDTH + 3, dis_level_1.get_height())
+                self.condition((WIDTH, dis_level.get_height(), SWIDTH, SHEIGHT + 2*self.rect.height))
+                self.rect.topleft = (WIDTH + 3, dis_level.get_height())
             self.animefy(self.animating_list, 0.05)
 
     def animefy(self, images, speed=0.2) -> None:
@@ -156,6 +157,11 @@ class Pacman(pygame.sprite.Sprite):
         """
         self.limit = rect_coords
 
+class Enemies(pygame.sprite.Sprite):
+    def __init__(self, x, y, color, *groups):
+        super().__init__(*groups)
+        self.color = color
+        self.rect = self.image.get_rect(center=(x,y))
 
 class DisplayingName(pygame.sprite.Sprite):
     def __init__(self, x, y, images, *groups):
@@ -218,6 +224,7 @@ class GameState:
             current_display,
         )
         self.level_clear = False
+        self.level_number = 0
 
     def scene_manager(self) -> None:
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
@@ -250,35 +257,29 @@ class GameState:
             pacman_group.draw(screen)
             sleep(0.1)
         else:
-            self.state = "level 1"
-            self.pacman = Pacman(
-                self.pacman.rect.w // 2,
-                dis_level_1.get_height() + self.pacman.rect.h // 2,
-                pacman_right,
-                pacman_group,
-            )
-            self.level_1_setup()
+            self.init_before_level('level 1')
         pygame.display.update()
 
     def level_1(self):
+        dis_level = InGame_FONT.render(f"Level - {self.level_number}", 1, colours["perk_green"])
         screen.fill(colours["black"])
-        screen.fill(colours["dark_grey"], (0, 0, SWIDTH, dis_level_1.get_height()))
-        screen.blit(dis_level_1, (WIDTH / 2 - dis_level_1.get_width() / 2, 0))
+        screen.fill(colours["dark_grey"], (0, 0, SWIDTH, dis_level.get_height()))
+        screen.blit(dis_level, (WIDTH / 2 - dis_level.get_width() / 2, 0))
         pygame.draw.line(
             screen,
             colours["dark_teal"],
-            (WIDTH, dis_level_1.get_height()),
+            (WIDTH, dis_level.get_height()),
             (WIDTH, HEIGHT),
             3,
         )
         pygame.draw.line(
-            screen, colours["dark_teal"], (0, dis_level_1.get_height()), (0, HEIGHT), 3
+            screen, colours["dark_teal"], (0, dis_level.get_height()), (0, HEIGHT), 3
         )
         pygame.draw.line(
             screen,
             colours["dark_teal"],
-            (0, dis_level_1.get_height()),
-            (SWIDTH, dis_level_1.get_height()),
+            (0, dis_level.get_height()),
+            (SWIDTH, dis_level.get_height()),
             3,
         )
         pygame.draw.line(
@@ -297,6 +298,10 @@ class GameState:
             self.pacman.temp_switch = True
         if not len(pellet_group) == 0:
             self.map_toggle()
+        else:
+            if self.pacman.rect.y > SHEIGHT + self.pacman.rect.width//2:
+                sleep(1)
+                self.init_before_level('level 1')
         self.pacman.check_collide(pellet_group)
         pacman_group.update(self.state)
         pacman_group.draw(screen)
@@ -307,11 +312,11 @@ class GameState:
         test_map_1 = rand_level_maker()
         test_map_2 = rand_level_maker()
         setit(num_pel_row_column)
-        self.pacman.condition((0, dis_level_1.get_height(), WIDTH, HEIGHT))
+        self.pacman.condition((0, dis_level.get_height(), WIDTH, HEIGHT))
         for row_index,row in enumerate(test_map_1):
             for col_index, col in enumerate(row):
                 x = 3 + col_index*WIDTH/num_pel_row_column
-                y = dis_level_1.get_height()+  row_index*(HEIGHT-dis_level_1.get_height())/num_pel_row_column
+                y = dis_level.get_height()+  row_index*(HEIGHT-dis_level.get_height())/num_pel_row_column
                 if col == 'b':
                     Walls('horizontal',(x,y), visible_obstacles)
                     Walls('vertical',(x,y), visible_obstacles)
@@ -322,7 +327,7 @@ class GameState:
         for row_index,row in enumerate(test_map_2):
             for col_index, col in enumerate(row):
                 x = 3 + col_index*WIDTH/num_pel_row_column
-                y = dis_level_1.get_height()+  row_index*(HEIGHT-dis_level_1.get_height())/num_pel_row_column
+                y = dis_level.get_height()+  row_index*(HEIGHT-dis_level.get_height())/num_pel_row_column
                 if col == 'b':
                     Walls('horizontal',(x,y), visible_obstacles_2)
                     Walls('vertical',(x,y), visible_obstacles_2)
@@ -341,6 +346,19 @@ class GameState:
         else:
             visible_obstacles_2.draw(screen)
             self.pacman.wall_collide(visible_obstacles_2)
+    
+    def init_before_level(self, level):
+        self.level_number += 1
+        visible_obstacles.empty();visible_obstacles_2.empty()
+        self.level_clear = False
+        self.state = level
+        self.pacman = Pacman(
+            self.pacman.rect.w // 2,
+            dis_level.get_height() + self.pacman.rect.h // 2,
+            pacman_right,
+            pacman_group,
+        )
+        self.level_1_setup()
 
     def end(self):
         screen.blit(background, (0, 0))

@@ -5,6 +5,7 @@ import os
 
 # from threading import Timer #timer(time, func).start
 
+
 FPS = 60
 clock = pygame.time.Clock()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
