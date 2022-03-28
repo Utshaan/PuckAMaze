@@ -82,13 +82,14 @@ current_display = pygame.sprite.GroupSingle()
 pellet_group = pygame.sprite.Group()
 visible_obstacles = pygame.sprite.Group()
 visible_obstacles_2 = pygame.sprite.Group()
+third_group = pygame.sprite.Group()
 
 walls_type = dict(
     vertical=(3, ((HEIGHT-dis_level.get_height()) / num_pel_row_column)+3),
     horizontal=((WIDTH / num_pel_row_column)+3, 3),
 )
 
-shuffle_list = (' ',' ',' ',' ','v','h','b')
+shuffle_list = (' ',' ',' ',' ','v','h','v','h')
 
 map_level_1 = [
     list(' v v v '),
