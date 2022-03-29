@@ -22,6 +22,7 @@ game_name_blink = DISPLAY_FONT.render("Mr.Pacman", 1, colours["black"])
 game_name = DISPLAY_FONT.render("Mr.Pacman", 1, colours["light_orange"])
 game_name_width, game_name_height = game_name.get_width(), game_name.get_height()
 dis_level = InGame_FONT.render(f"Level - 1", 1, colours["perk_green"])
+dis_level_height = dis_level.get_height()
 background = pygame.transform.scale(
     pygame.image.load(os.path.join("Assets", "map.jpg")), (SWIDTH, SHEIGHT)
 )
@@ -82,7 +83,7 @@ current_display = pygame.sprite.GroupSingle()
 pellet_group = pygame.sprite.Group()
 visible_obstacles = pygame.sprite.Group()
 visible_obstacles_2 = pygame.sprite.Group()
-third_group = pygame.sprite.Group()
+ghosts_group = pygame.sprite.Group()
 
 walls_type = dict(
     vertical=(3, ((HEIGHT-dis_level.get_height()) / num_pel_row_column)+3),
@@ -90,15 +91,3 @@ walls_type = dict(
 )
 
 shuffle_list = (' ',' ',' ',' ','v','h','v','h')
-
-map_level_1 = [
-    list(' v v v '),
-    list(' vv  h '),
-    list('  hvhh '),
-    list(' v   bv'),
-    list('h bvb v'),
-    list('  v  h '),
-    list(' h b v '),
-]
-
-# test_map = []

@@ -1,14 +1,13 @@
 import pygame
 from itertools import product
-from rich import print
 import os
 from time import sleep
 import random
 from pathfinding.core.grid import Grid
+from pathfinding.finder.a_star import AStarFinder
 from screen import *
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
 
 def setit(number: int) -> None:
     """sets an entire set of power Pellets
@@ -19,10 +18,25 @@ def setit(number: int) -> None:
     for i, j in product(range(number), repeat=2):
         PowerPellets(
             (2 * i + 1) * WIDTH // (2 * number),
-            dis_level.get_height()
-            + ((2 * j + 1) * (HEIGHT - dis_level.get_height()) // (number * 2)),
+            dis_level_height
+            + ((2 * j + 1) * (HEIGHT - dis_level_height) // (number * 2)),
             pellet_group,
         )
+
+def get_cell(pos:tuple)-> tuple:
+    x_cell = (2*num_pel_row_column -1)*pos[0]//WIDTH
+    y_cell = (2*num_pel_row_column -1)*(pos[1] - dis_level_height)//(HEIGHT - dis_level_height)
+    if x_cell%2 ==0 & y_cell%2 ==0:
+        return(x_cell,y_cell)
+    elif x_cell !=0 and y_cell != 0:
+        return(x_cell -1, y_cell -1)
+    else:
+        return(x_cell +1,y_cell+1)
+
+def get_coord(x:int, y:int) -> tuple:
+    absc = x*WIDTH//(2*num_pel_row_column) + WIDTH//(2*num_pel_row_column)
+    oord = dis_level_height + y*(HEIGHT-dis_level_height)//(2*num_pel_row_column) + (HEIGHT - dis_level_height)//(2*num_pel_row_column)
+    return (absc, oord)
 
 def rand_level_maker() -> None:
     map_level = []
@@ -43,9 +57,8 @@ def rand_level_maker() -> None:
     map_level[1][0] = ' '
     return map_level
 
-
 class Pacman(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, image, *groups) -> None:
+    def __init__(self, x: int, y: int, image: pygame.Surface, *groups) -> None:
         """this is the summary
 
         Args:
@@ -59,7 +72,7 @@ class Pacman(pygame.sprite.Sprite):
         self.current_image = 0
         self.score = 0
         self.image = image
-        self.rect = self.image.get_rect(center=(x, y))
+        self.rect = self.image.get_rect(center=(x,y))
         self.animating_list = [self.image, pac_close]
         self.limit = (0, 0, SWIDTH, SHEIGHT)
         self.direction = pygame.math.Vector2()
@@ -81,8 +94,8 @@ class Pacman(pygame.sprite.Sprite):
         elif scene == "level 1":
             if self.temp_switch:
                 self.temp_switch = False
-                self.condition((WIDTH, dis_level.get_height(), SWIDTH, SHEIGHT + 2*self.rect.height))
-                self.rect.topleft = (WIDTH + 3, dis_level.get_height())
+                self.condition((WIDTH, dis_level_height, SWIDTH, SHEIGHT + 2*self.rect.height))
+                self.rect.topleft = (WIDTH + 3, dis_level_height)
             self.animefy(self.animating_list, 0.05)
 
     def animefy(self, images, speed=0.2) -> None:
@@ -165,9 +178,68 @@ class Ghosts(pygame.sprite.Sprite):
         self.color = color
         self.image = pygame.transform.scale(pygame.image.load(os.path.join("Assets", f"ghost_{self.color}.png")), (637/20, 673/20))
         self.rect = self.image.get_rect(center=(x,y))
+        self.pos = self.rect.center
+        self.speed = 0.6
+        self.direction = pygame.math.Vector2(0,0)
+        self.path = []
+        self.collision_rects = []
     
-    def findpath(self):
-        pass
+    def findpath(self,map, pos):
+        grid = Grid(matrix=map)
+        x_pos, y_pos = get_cell(self.rect.center)
+        self.start = grid.node(x_pos, y_pos)
+        self.end = grid.node(pos[0],pos[1])
+        self.start_coords, self.end_coords = ((x_pos, y_pos), (pos[0],pos[1]))
+        finder = AStarFinder()
+        self.path, _ = finder.find_path(self.start, self.end, grid)
+        self.draw_path()
+        self.update()
+        grid.cleanup()
+        self.set_path()
+
+    def set_path(self):
+        self.get_direction()
+    
+    def get_direction(self):
+        if len(self.path) >0 and self.end_coords != self.start_coords:
+            self.direction = (pygame.math.Vector2(self.end_coords) - pygame.math.Vector2(self.start_coords)).normalize()
+            if abs(self.direction.x) >= abs(self.direction.y):
+                self.direction = pygame.math.Vector2(self.direction.x/abs(self.direction.x),0)
+            else:
+                self.direction = pygame.math.Vector2(0,self.direction.y/abs(self.direction.y))
+        else:
+            self.direction = pygame.math.Vector2(0,0)
+    
+    def update(self):
+        self.pos += self.direction*self.speed
+        self.rect.center = self.pos
+        self.wall_collide(visible_obstacles)
+        self.wall_collide(visible_obstacles_2)
+
+    def wall_collide(self, group) -> None:
+        """check collision with walls in particular
+
+        Args:
+            group (group): Gamestate.state
+        """
+        for sprite in group:
+            if sprite.rect.colliderect(self.rect):
+                if self.direction.x < 0 and abs(sprite.rect.right - self.rect.left)<= 7:
+                    self.rect.centerx += 5
+                if self.direction.x > 0 and abs(sprite.rect.left - self.rect.right)<= 7:
+                    self.rect.centerx -= 5
+                if self.direction.y < 0 and abs(sprite.rect.bottom - self.rect.top)<= 7:
+                    self.rect.centery += 5
+                if self.direction.y > 0 and abs(sprite.rect.top - self.rect.bottom)<= 7:
+                    self.rect.centery -=5
+
+    def draw_path(self):
+        if self.path:
+            points = []
+            for point in self.path:
+                x,y = get_coord(point[0], point[1])
+                points.append((x,y))
+            # pygame.draw.lines(screen,self.color, False, points, 5)
 
 class DisplayingName(pygame.sprite.Sprite):
     def __init__(self, x, y, images, *groups):
@@ -186,7 +258,6 @@ class DisplayingName(pygame.sprite.Sprite):
                 self.current_image = 0
             self.image = self.sprites[int(self.current_image)]
 
-
 class PowerPellets(pygame.sprite.Sprite):
     def __init__(self, x, y, *groups) -> None:
         super().__init__(*groups)
@@ -195,7 +266,6 @@ class PowerPellets(pygame.sprite.Sprite):
             os.path.join("Assets", "pellet.png")
         ).convert_alpha()
         self.rect = self.image.get_rect(center=(self.x, self.y))
-
 
 class Walls(pygame.sprite.Sprite):
     def __init__(self, w_type:str,pos:tuple, *group: list, colour:str = 'dark_teal') -> None:
@@ -211,7 +281,6 @@ class Walls(pygame.sprite.Sprite):
         self.image = pygame.Surface(walls_type[w_type])
         self.image.fill(colours[colour])
         self.rect = self.image.get_rect(topleft=pos)
-
 
 class GameState:
     def __init__(self) -> None:
@@ -232,7 +301,6 @@ class GameState:
         self.level_clear = False
         self.level_number = 0
         self.dis_level = dis_level
-        self.test_map_1, self.test_map_2 = [],[]
 
     def scene_manager(self) -> None:
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
@@ -312,31 +380,34 @@ class GameState:
                 self.init_before_level('level 1')
         self.pacman.check_collide(pellet_group)
         pacman_group.update(self.state)
+        ghosts_group.draw(screen)
         pacman_group.draw(screen)
         pygame.display.update()
 
     def level_1_setup(self):
         self.counter = 0
-        self.test_map_1 = rand_level_maker()
-        self.test_map_2 = rand_level_maker()
+        test_map_1 = rand_level_maker()
+        self.obstacles_map_1 = self.map(test_map_1)
+        test_map_2 = rand_level_maker()
+        self.obstacles_map_2 = self.map(test_map_2)
         setit(num_pel_row_column)
         self.pacman.condition((0, self.dis_level.get_height(), WIDTH, HEIGHT))
-        for row_index,row in enumerate(self.test_map_1):
+        for row_index,row in enumerate(test_map_1):
             for col_index, col in enumerate(row):
                 x = 3 + col_index*WIDTH/num_pel_row_column
                 y = self.dis_level.get_height()+  row_index*(HEIGHT-self.dis_level.get_height())/num_pel_row_column
                 if col == 'v':
-                    Walls('vertical',(x,y), visible_obstacles, third_group)
+                    Walls('vertical',(x,y), visible_obstacles)
                 elif col == 'h':
-                    Walls('horizontal',(x,y), visible_obstacles, third_group)
-        for row_index,row in enumerate(self.test_map_2):
+                    Walls('horizontal',(x,y), visible_obstacles)
+        for row_index,row in enumerate(test_map_2):
             for col_index, col in enumerate(row):
                 x = 3 + col_index*WIDTH/num_pel_row_column
                 y = self.dis_level.get_height()+  row_index*(HEIGHT-self.dis_level.get_height())/num_pel_row_column
                 if col == 'v':
-                    Walls('vertical',(x,y), visible_obstacles_2, third_group)
+                    Walls('vertical',(x,y), visible_obstacles_2)
                 elif col == 'h':
-                    Walls('horizontal',(x,y), visible_obstacles_2, third_group)
+                    Walls('horizontal',(x,y), visible_obstacles_2)
 
     def map_toggle(self):
         self.counter += 1
@@ -344,9 +415,13 @@ class GameState:
             self.counter =0
         if self.counter > 250:
             visible_obstacles.draw(screen)
+            self.ghost_1.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
+            # self.ghost_2.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
             self.pacman.wall_collide(visible_obstacles)
         else:
             visible_obstacles_2.draw(screen)
+            self.ghost_1.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
+            # self.ghost_2.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
             self.pacman.wall_collide(visible_obstacles_2)
 
     def init_before_level(self, level):
@@ -360,6 +435,8 @@ class GameState:
             pacman_right,
             pacman_group,
         )
+        self.ghost_1 = Ghosts((2*random.randint(5,num_pel_row_column)-1)*WIDTH/(2*num_pel_row_column),dis_level_height+(2*random.randint(1,num_pel_row_column)-1)*(HEIGHT - dis_level_height)/(2*num_pel_row_column),'red',ghosts_group)
+        # self.ghost_2 = Ghosts(WIDTH - self.pacman.rect.w/2,HEIGHT - self.pacman.rect.h/2,'pink',third_group)
         self.level_1_setup()
 
     def end(self):
@@ -369,7 +446,7 @@ class GameState:
         self.run = False
 
     def map(self, test_map):
-        map = [[1 for _ in range(13)] for _ in range(13)]
+        map = [[1 for _ in range(2*num_pel_row_column -1)] for _ in range(2*num_pel_row_column -1)]
         for col,walls_list in enumerate(test_map):
             for row,walls in enumerate(walls_list):
                 if walls == 'h':
@@ -379,3 +456,4 @@ class GameState:
         for x in range(1,len(map),2):
             for y in range(1,len(map),2):
                 map[x][y] = 0
+        return map

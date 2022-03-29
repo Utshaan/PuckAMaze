@@ -1,11 +1,11 @@
 import pygame
-from pacman import GameState, rand_level_maker
+from pacman import GameState
 from screen import *
 import os
+from time import time
 from rich import print
 
 # from threading import Timer #timer(time, func).start
-
 
 FPS = 60
 clock = pygame.time.Clock()
@@ -19,4 +19,3 @@ while game_state.run:
     events = pygame.event.get()
     clock.tick(FPS)
     game_state.scene_manager()
-    
