@@ -24,14 +24,9 @@ def setit(number: int) -> None:
         )
 
 def get_cell(pos:tuple)-> tuple:
-    x_cell = (2*num_pel_row_column -1)*pos[0]//WIDTH
-    y_cell = (2*num_pel_row_column -1)*(pos[1] - dis_level_height)//(HEIGHT - dis_level_height)
-    if x_cell%2 ==0 & y_cell%2 ==0:
-        return(x_cell,y_cell)
-    elif x_cell !=0 and y_cell != 0:
-        return(x_cell -1, y_cell -1)
-    else:
-        return(x_cell +1,y_cell+1)
+    x_cell = (num_pel_row_column)*pos[0]//WIDTH
+    y_cell = (num_pel_row_column)*(pos[1] - dis_level_height)//(HEIGHT - dis_level_height)
+    return(2*x_cell, 2*y_cell)
 
 def get_coord(x:int, y:int) -> tuple:
     absc = x*WIDTH//(2*num_pel_row_column) + WIDTH//(2*num_pel_row_column)
@@ -192,54 +187,29 @@ class Ghosts(pygame.sprite.Sprite):
         self.start_coords, self.end_coords = ((x_pos, y_pos), (pos[0],pos[1]))
         finder = AStarFinder()
         self.path, _ = finder.find_path(self.start, self.end, grid)
-        self.draw_path()
+        if self.rect.center == get_coord(x_pos, y_pos):
+            self.draw_path()
+            self.get_direction()
         self.update()
         grid.cleanup()
-        self.set_path()
-
-    def set_path(self):
-        self.get_direction()
     
     def get_direction(self):
-        if len(self.path) >0 and self.end_coords != self.start_coords:
-            self.direction = (pygame.math.Vector2(self.end_coords) - pygame.math.Vector2(self.start_coords)).normalize()
-            if abs(self.direction.x) >= abs(self.direction.y):
-                self.direction = pygame.math.Vector2(self.direction.x/abs(self.direction.x),0)
-            else:
-                self.direction = pygame.math.Vector2(0,self.direction.y/abs(self.direction.y))
+        if len(self.path) >1:
+            self.direction = (pygame.math.Vector2(self.directors[1]) - pygame.math.Vector2(self.directors[0])).normalize()
         else:
             self.direction = pygame.math.Vector2(0,0)
     
     def update(self):
         self.pos += self.direction*self.speed
         self.rect.center = self.pos
-        self.wall_collide(visible_obstacles)
-        self.wall_collide(visible_obstacles_2)
-
-    def wall_collide(self, group) -> None:
-        """check collision with walls in particular
-
-        Args:
-            group (group): Gamestate.state
-        """
-        for sprite in group:
-            if sprite.rect.colliderect(self.rect):
-                if self.direction.x < 0 and abs(sprite.rect.right - self.rect.left)<= 7:
-                    self.rect.centerx += 5
-                if self.direction.x > 0 and abs(sprite.rect.left - self.rect.right)<= 7:
-                    self.rect.centerx -= 5
-                if self.direction.y < 0 and abs(sprite.rect.bottom - self.rect.top)<= 7:
-                    self.rect.centery += 5
-                if self.direction.y > 0 and abs(sprite.rect.top - self.rect.bottom)<= 7:
-                    self.rect.centery -=5
 
     def draw_path(self):
         if self.path:
-            points = []
+            self.points = []
             for point in self.path:
                 x,y = get_coord(point[0], point[1])
-                points.append((x,y))
-            # pygame.draw.lines(screen,self.color, False, points, 5)
+                self.points.append((x,y))
+            self.directors = (self.path[0], self.path[1])
 
 class DisplayingName(pygame.sprite.Sprite):
     def __init__(self, x, y, images, *groups):
@@ -374,13 +344,13 @@ class GameState:
             self.pacman.temp_switch = True
         if not len(pellet_group) == 0:
             self.map_toggle()
+            ghosts_group.draw(screen)
         else:
             if self.pacman.rect.y > SHEIGHT + self.pacman.rect.width//2:
                 sleep(1)
                 self.init_before_level('level 1')
         self.pacman.check_collide(pellet_group)
         pacman_group.update(self.state)
-        ghosts_group.draw(screen)
         pacman_group.draw(screen)
         pygame.display.update()
 
@@ -415,18 +385,21 @@ class GameState:
             self.counter =0
         if self.counter > 250:
             visible_obstacles.draw(screen)
-            self.ghost_1.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
+            for ghost in ghosts_group.sprites():
+                ghost.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
             # self.ghost_2.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
             self.pacman.wall_collide(visible_obstacles)
         else:
             visible_obstacles_2.draw(screen)
-            self.ghost_1.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
+            for ghost in ghosts_group.sprites():
+                ghost.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
             # self.ghost_2.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
             self.pacman.wall_collide(visible_obstacles_2)
 
     def init_before_level(self, level):
         self.level_number += 1
-        visible_obstacles.empty();visible_obstacles_2.empty()
+        ghosts_needed = len(ghosts_group) + 1
+        visible_obstacles.empty();visible_obstacles_2.empty(); ghosts_group.empty()
         self.level_clear = False
         self.state = level
         self.pacman = Pacman(
@@ -435,8 +408,9 @@ class GameState:
             pacman_right,
             pacman_group,
         )
-        self.ghost_1 = Ghosts((2*random.randint(5,num_pel_row_column)-1)*WIDTH/(2*num_pel_row_column),dis_level_height+(2*random.randint(1,num_pel_row_column)-1)*(HEIGHT - dis_level_height)/(2*num_pel_row_column),'red',ghosts_group)
-        # self.ghost_2 = Ghosts(WIDTH - self.pacman.rect.w/2,HEIGHT - self.pacman.rect.h/2,'pink',third_group)
+        for _ in range(ghosts_needed):
+            ghost_coords = get_coord(2*(random.randint(4,6)), 2*(random.randint(0,6)))
+            ghosts_group.add(Ghosts(ghost_coords[0], ghost_coords[1],'red'))
         self.level_1_setup()
 
     def end(self):
