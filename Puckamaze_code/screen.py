@@ -29,8 +29,7 @@ dis_level_height = dis_level.get_height()
 # background = pg.transform.scale(
 #     pg.image.load(os.path.join("Assets", "map.jpg")), (SWIDTH, SHEIGHT)
 # )
-icon = pg.image.load(os.path.join("Assets", "icon.png"))
-not_background_shadow = pg.Rect(0, 0, WIDTH, dis_level.get_height())
+# icon = pg.image.load(os.path.join("Assets", "icon.png"))
 
 pacman_left = pg.transform.rotate(
     pg.transform.scale(
@@ -63,7 +62,6 @@ pac_close_R = pg.transform.scale(
     pg.image.load(os.path.join("Assets", "pacman_close_R.png")),
     (673 / 20, 721 / 20),
 )
-pac_last = pacman_right
 pellet_image = pg.image.load(os.path.join("Assets", "pellet.png")).convert_alpha()
 pacman_init_image = pg.transform.rotate(
     pg.transform.scale(
