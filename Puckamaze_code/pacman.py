@@ -1,7 +1,7 @@
 import pygame
 from itertools import product
 import os
-from time import sleep
+from time import sleep, time
 import random
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
@@ -53,7 +53,7 @@ def rand_level_maker() -> None:
     return map_level
 
 class Pacman(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, image: pygame.Surface, *groups) -> None:
+    def __init__(self, x: int, y: int, image: pygame.Surface, *groups, score=0) -> None:
         """this is the summary
 
         Args:
@@ -61,11 +61,12 @@ class Pacman(pygame.sprite.Sprite):
             y (int): y coordinate
             image (image): Image
             *groups: Groups
+            score: last attained score, if any
         """
         super().__init__(*groups)
         self.to_animate = True
         self.current_image = 0
-        self.score = 0
+        self.score = score
         self.image = image
         self.rect = self.image.get_rect(center=(x,y))
         self.animating_list = [self.image, pac_close]
@@ -107,7 +108,7 @@ class Pacman(pygame.sprite.Sprite):
                 self.current_image = 0
             self.image = self.sprites[int(self.current_image)]
 
-    def check_collide(self, group) -> None:
+    def get_score(self, group) -> None:
         """Checks if the object has collided with any other object and increments the score by one.
 
         Args:
@@ -132,6 +133,9 @@ class Pacman(pygame.sprite.Sprite):
                     self.rect.top = sprite.rect.bottom
                 if self.direction.y > 0 and abs(sprite.rect.top - self.rect.bottom)<= 5:
                     self.rect.bottom = sprite.rect.top
+
+    def ghost_collide(self) ->None:
+        return pygame.sprite.spritecollide(self, ghosts_group, False)
 
     def control(self) -> None:
         """checks for all controls. needs no inputs"""
@@ -174,7 +178,7 @@ class Ghosts(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(pygame.image.load(os.path.join("Assets", f"ghost_{self.color}.png")), (637/20, 673/20))
         self.rect = self.image.get_rect(center=(x,y))
         self.pos = self.rect.center
-        self.speed = 0.6
+        self.speed = speed_picker[color]
         self.direction = pygame.math.Vector2(0,0)
         self.path = []
         self.collision_rects = []
@@ -204,7 +208,7 @@ class Ghosts(pygame.sprite.Sprite):
         self.rect.center = self.pos
 
     def draw_path(self):
-        if self.path:
+        if len(self.path)>1:
             self.points = []
             for point in self.path:
                 x,y = get_coord(point[0], point[1])
@@ -256,6 +260,7 @@ class GameState:
     def __init__(self) -> None:
         self.run = True
         self.state = "initialisation"
+        self.revertable_state = "pause_menu"
         self.pacman = Pacman(
             SWIDTH - 100,
             SHEIGHT / 2 + 2 * game_name_height,
@@ -273,13 +278,18 @@ class GameState:
         self.dis_level = dis_level
 
     def scene_manager(self) -> None:
-        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
-            self.run = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.run = False
+            elif event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+                self.revertable_state, self.state = self.state, self.revertable_state
         match self.state:
             case "initialisation":
                 self.initialisation()
             case "level 1":
                 self.level_1()
+            case "pause_menu":
+                self.pause_menu()
             case "end":
                 self.end()
 
@@ -308,9 +318,11 @@ class GameState:
 
     def level_1(self):
         self.dis_level = InGame_FONT.render(f"Level - {self.level_number}", 1, colours["perk_green"])
+        self.display_score = Score_FONT.render(f"{30*self.pacman.score}", 1, colours["light_orange"])
         screen.fill(colours["black"])
         screen.fill(colours["dark_grey"], (0, 0, SWIDTH, self.dis_level.get_height()))
         screen.blit(self.dis_level, (WIDTH / 2 - self.dis_level.get_width() / 2, 0))
+        screen.blit(self.display_score, (SWIDTH - 1.5*self.display_score.get_width(), self.dis_level.get_height()/2 - self.display_score.get_height()/2))
         pygame.draw.line(
             screen,
             colours["dark_teal"],
@@ -349,7 +361,9 @@ class GameState:
             if self.pacman.rect.y > SHEIGHT + self.pacman.rect.width//2:
                 sleep(1)
                 self.init_before_level('level 1')
-        self.pacman.check_collide(pellet_group)
+        if self.pacman.ghost_collide():
+            self.state = "end"
+        self.pacman.get_score(pellet_group)
         pacman_group.update(self.state)
         pacman_group.draw(screen)
         pygame.display.update()
@@ -387,18 +401,15 @@ class GameState:
             visible_obstacles.draw(screen)
             for ghost in ghosts_group.sprites():
                 ghost.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
-            # self.ghost_2.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
             self.pacman.wall_collide(visible_obstacles)
         else:
             visible_obstacles_2.draw(screen)
             for ghost in ghosts_group.sprites():
                 ghost.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
-            # self.ghost_2.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
             self.pacman.wall_collide(visible_obstacles_2)
 
     def init_before_level(self, level):
         self.level_number += 1
-        ghosts_needed = len(ghosts_group) + 1
         visible_obstacles.empty();visible_obstacles_2.empty(); ghosts_group.empty()
         self.level_clear = False
         self.state = level
@@ -406,15 +417,18 @@ class GameState:
             self.pacman.rect.w // 2,
             self.dis_level.get_height() + self.pacman.rect.h // 2,
             pacman_right,
-            pacman_group,
+            pacman_group,score=self.pacman.score
         )
-        for _ in range(ghosts_needed):
+        for _ in range(self.level_number):
             ghost_coords = get_coord(2*(random.randint(4,6)), 2*(random.randint(0,6)))
-            ghosts_group.add(Ghosts(ghost_coords[0], ghost_coords[1],'red'))
+            ghosts_group.add(Ghosts(ghost_coords[0], ghost_coords[1],random.choice(tuple(speed_picker.keys()))))
         self.level_1_setup()
 
+    def pause_menu(self):
+        print("here", time())
+
     def end(self):
-        screen.blit(background, (0, 0))
+        screen.fill(colours["dark_grey"])
         pygame.display.update()
         sleep(3)
         self.run = False
