@@ -1,14 +1,13 @@
-import pygame
+import pygame as pg
 from pacman import GameState
 from screen import *
 import os
 from time import time
 from rich import print
 
-# from threading import Timer #timer(time, func).start
 
 FPS = 60
-clock = pygame.time.Clock()
+clock = pg.time.Clock()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 game_state = GameState()
