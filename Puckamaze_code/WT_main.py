@@ -2,8 +2,6 @@ import pygame as pg
 from pacman import GameState
 from screen import *
 import os
-from time import time
-from rich import print
 
 
 FPS = 60
