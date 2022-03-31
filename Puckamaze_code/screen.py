@@ -16,16 +16,23 @@ colours = dict(
     dark_teal=(14, 120, 120),
 )
 
+speed_picker = dict(
+    red = 0.8,
+    pink = 1,
+    green = 0.9
+)
+
 InGame_FONT = pygame.font.SysFont("couriernew", 50)
 DISPLAY_FONT = pygame.font.Font(os.path.join("Assets", "PAC-FONT.TTF"), 80)
+Score_FONT = pygame.font.SysFont("couriernew", 30)
 game_name_blink = DISPLAY_FONT.render("Mr.Pacman", 1, colours["black"])
 game_name = DISPLAY_FONT.render("Mr.Pacman", 1, colours["light_orange"])
 game_name_width, game_name_height = game_name.get_width(), game_name.get_height()
 dis_level = InGame_FONT.render(f"Level - 1", 1, colours["perk_green"])
 dis_level_height = dis_level.get_height()
-background = pygame.transform.scale(
-    pygame.image.load(os.path.join("Assets", "map.jpg")), (SWIDTH, SHEIGHT)
-)
+# background = pygame.transform.scale(
+#     pygame.image.load(os.path.join("Assets", "map.jpg")), (SWIDTH, SHEIGHT)
+# )
 icon = pygame.image.load(os.path.join("Assets", "icon.png"))
 not_background_shadow = pygame.Rect(0, 0, WIDTH, dis_level.get_height())
 
