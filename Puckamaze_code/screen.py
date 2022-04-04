@@ -9,11 +9,13 @@ screen = pg.display.set_mode((SWIDTH, SHEIGHT), pg.RESIZABLE)
 
 colours = dict(
     black=(0, 0, 0),
+    dark_red=(179, 12, 0),
     light_orange=(236, 134, 87),
     perk_green=(155, 255, 0),
     turquoise=(12, 126, 158),
     dark_grey=(23, 23, 23),
     dark_teal=(14, 120, 120),
+    light_yellow=(255, 235, 149),
 )
 
 speed_picker = dict(red=0.8, pink=1, green=0.9)
@@ -77,7 +79,9 @@ pacman_init_close = pg.transform.rotate(
     180,
 )
 
-num_pel_row_column = 7
+# num_pel_row_column = 7
+num_row, num_col = 7, 7
+start_num_row, start_num_col = 3,5
 
 pacman_group = pg.sprite.GroupSingle()
 current_display = pg.sprite.GroupSingle()
@@ -85,10 +89,22 @@ pellet_group = pg.sprite.Group()
 visible_obstacles = pg.sprite.Group()
 visible_obstacles_2 = pg.sprite.Group()
 ghosts_group = pg.sprite.Group()
+start_menu_frames = pg.sprite.Group()
+menu_display = pg.sprite.Group()
 
 walls_type = dict(
-    vertical=(3, ((HEIGHT - dis_level.get_height()) / num_pel_row_column) + 3),
-    horizontal=((WIDTH / num_pel_row_column) + 3, 3),
+    vertical=(3, ((HEIGHT - dis_level.get_height()) / num_col)+1),
+    horizontal=((WIDTH / num_row)+1, 3),
+    big_H=(SWIDTH, 3),
+    small_H=(WIDTH, 3),
+    big_V=(3, SHEIGHT),
+    small_V=(3, HEIGHT),
+    start_H=(SWIDTH*40/100, 3),
+    start_V=(3, SHEIGHT*80/100),
+    menu_V=(3, ((80*HEIGHT/100) / start_num_col)+1),
+    menu_H=(((40*SWIDTH/100)/ start_num_row)+1, 3),
 )
 
 shuffle_list = (" ", " ", " ", " ", "v", "h", "v", "h")
+
+pg.mixer.music.load(os.path.join("Assets", "intro_music.wav"))

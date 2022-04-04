@@ -27,9 +27,9 @@ def setit(number: int) -> None:
 
 
 def get_cell(pos: tuple) -> tuple:
-    x_cell = (num_pel_row_column) * pos[0] // WIDTH
+    x_cell = num_row * pos[0] // WIDTH
     y_cell = (
-        (num_pel_row_column)
+        num_col
         * (pos[1] - dis_level_height)
         // (HEIGHT - dis_level_height)
     )
@@ -37,29 +37,29 @@ def get_cell(pos: tuple) -> tuple:
 
 
 def get_coord(x: int, y: int) -> tuple:
-    absc = x * WIDTH // (2 * num_pel_row_column) + WIDTH // (2 * num_pel_row_column)
+    absc = x * WIDTH // (2 * num_row) + WIDTH // (2 * num_row)
     oord = (
         dis_level_height
-        + y * (HEIGHT - dis_level_height) // (2 * num_pel_row_column)
-        + (HEIGHT - dis_level_height) // (2 * num_pel_row_column)
+        + y * (HEIGHT - dis_level_height) // (2 * num_col)
+        + (HEIGHT - dis_level_height) // (2 * num_col)
     )
     return (absc, oord)
 
 
-def rand_level_maker() -> None:
+def rand_level_maker(row_len:int = num_row, col_len:int = num_col) -> None:
     map_level = []
     temp = " "
-    for _ in range(num_pel_row_column - 1):
+    for _ in range(row_len - 1):
         temp += random.choice(shuffle_list[1:5])
     map_level.append(list(temp))
-    for _ in range(num_pel_row_column - 2):
+    for _ in range(col_len - 2):
         s = random.choice([" ", "h"])
-        for _ in range(num_pel_row_column - 2):
+        for _ in range(row_len - 2):
             s += random.choice(shuffle_list)
         s += random.choice(shuffle_list[:-1])
         map_level.append(list(s))
     temp = " "
-    for _ in range(num_pel_row_column - 1):
+    for _ in range(row_len - 1):
         temp += random.choice(shuffle_list[1:5])
     map_level.append(list(temp))
     map_level[1][0] = " "
@@ -67,7 +67,7 @@ def rand_level_maker() -> None:
 
 
 class Pacman(pg.sprite.Sprite):
-    def __init__(self, x: int, y: int, image: pg.Surface, *groups, score=0) -> None:
+    def __init__(self, x: int, y: int, image: pg.Surface, *groups, score=-1) -> None:
         """this is the summary
 
         Args:
@@ -88,8 +88,9 @@ class Pacman(pg.sprite.Sprite):
         self.direction = pg.math.Vector2()
         self.temp_switch = False
 
-    def move_left(self) -> None:
-        self.rect.x -= 20
+    def move_direction(self, direction) -> None:
+        self.rect.x += 20*direction[0]
+        self.rect.y += 20* direction[1]
 
     def update(self, scene: str) -> None:
         """Updating the object
@@ -99,7 +100,7 @@ class Pacman(pg.sprite.Sprite):
             scene (str): GameState.scene
         """
         self.control()
-        if scene == "initialisation":
+        if scene == "initialisation" or scene == 'initialisation_2':
             self.animefy((pacman_init_image, pacman_init_close))
         elif scene == "level 1":
             if self.temp_switch:
@@ -297,17 +298,23 @@ class DisplayingName(pg.sprite.Sprite):
         super().__init__(*groups)
         self.sprites = images
         self.x, self.y = x, y
-        self.to_animate = False
         self.current_image = 0
         self.image = self.sprites[int(self.current_image)]
         self.rect = self.image.get_rect(topleft=(self.x, self.y))
 
-    def update(self, speed):
-        if self.to_animate:
-            self.current_image += speed
-            if self.current_image >= len(self.sprites):
-                self.current_image = 0
-            self.image = self.sprites[int(self.current_image)]
+    def update(self, speed, direction=(0,0), switch = False):
+        if switch:
+            self.current_image += 1
+        if direction != (0,0):
+            self.move(direction)
+        self.current_image += speed
+        if self.current_image >= len(self.sprites):
+            self.current_image = 0
+        self.image = self.sprites[int(self.current_image)]
+    
+    def move(self, direction):
+        self.rect.x += 20*direction[0]
+        self.rect.y += 20*direction[1]
 
 
 class PowerPellets(pg.sprite.Sprite):
@@ -320,7 +327,7 @@ class PowerPellets(pg.sprite.Sprite):
 
 class Walls(pg.sprite.Sprite):
     def __init__(
-        self, w_type: str, pos: tuple, *group: list, colour: str = "dark_teal"
+        self, w_type: str, pos: tuple, colour: str = "dark_teal", *group: list
     ) -> None:
         """Creates Walls
 
@@ -356,6 +363,8 @@ class GameState:
         self.level_clear = False
         self.level_number = 0
         self.dis_level = dis_level
+        self.music = True
+        self.last_map = visible_obstacles
 
     def scene_manager(self) -> None:
         for event in pg.event.get():
@@ -366,16 +375,26 @@ class GameState:
         match self.state:
             case "initialisation":
                 self.initialisation()
+            case "initialisation_2":
+                self.initialisation_2()
+            case 'start_menu':
+                self.start_menu()
             case "level 1":
+                if self.music:
+                    pg.mixer.music.play(-1)
+                    self.music = False
                 self.level_1()
             case "pause_menu":
+                pg.mixer.music.pause()
+                self.music = True
                 self.pause_menu()
             case "end":
+                pg.mixer.music.stop()
                 self.end()
+        pg.display.update()
 
     def initialisation(self):
         screen.fill(colours["dark_grey"])
-        self.initialisation_text.to_animate = True
         if self.pacman.rect.centerx > -(self.pacman.rect.w // 2 + 20):
             screen.fill(
                 colours["black"],
@@ -388,132 +407,45 @@ class GameState:
             )
             current_display.update(0.25)
             current_display.draw(screen)
-            self.pacman.move_left()
+            self.pacman.move_direction((-1,0))
             pacman_group.update(self.state)
             pacman_group.draw(screen)
             sleep(0.1)
         else:
-            self.init_before_level("level 1")
-        pg.display.update()
+            self.state = 'initialisation_2'
 
-    def level_1(self):
-        self.dis_level = InGame_FONT.render(
-            f"Level - {self.level_number}", 1, colours["perk_green"]
-        )
-        self.display_score = Score_FONT.render(
-            f"G:{30*self.pacman.score}", 1, colours["light_orange"]
-        )
-        screen.fill(colours["black"])
-        screen.fill(colours["dark_grey"], (0, 0, SWIDTH, self.dis_level.get_height()))
-        screen.blit(self.dis_level, (WIDTH / 2 - self.dis_level.get_width() / 2, 0))
-        screen.blit(
-            self.display_score,
-            (
-                SWIDTH - 1.5 * self.display_score.get_width(),
-                self.dis_level.get_height() / 2 - self.display_score.get_height() / 2,
-            ),
-        )
-        pg.draw.line(
-            screen,
-            colours["dark_teal"],
-            (WIDTH, self.dis_level.get_height()),
-            (WIDTH, HEIGHT),
-            3,
-        )
-        pg.draw.line(
-            screen,
-            colours["dark_teal"],
-            (0, self.dis_level.get_height()),
-            (0, HEIGHT),
-            3,
-        )
-        pg.draw.line(
-            screen,
-            colours["dark_teal"],
-            (0, self.dis_level.get_height()),
-            (SWIDTH, self.dis_level.get_height()),
-            3,
-        )
-        pg.draw.line(
-            screen, colours["dark_teal"], (0, HEIGHT), (SWIDTH, HEIGHT), 3
-        ) if len(pellet_group) != 0 else pg.draw.line(
-            screen, colours["dark_teal"], (0, HEIGHT), (WIDTH, HEIGHT), 3
-        ) and pg.draw.line(
-            screen, colours["dark_teal"], (WIDTH, HEIGHT), (WIDTH, SHEIGHT), 3
-        )
-        pg.draw.line(
-            screen, colours["dark_teal"], (SWIDTH - 1.5, 0), (SWIDTH - 1.5, SHEIGHT), 3
-        )
-        pellet_group.draw(screen)
-        if not self.level_clear and len(pellet_group) == 0:
-            self.level_clear = True
-            self.pacman.temp_switch = True
-        if not len(pellet_group) == 0:
-            self.map_toggle()
-            ghosts_group.draw(screen)
+    def initialisation_2(self):
+        screen.fill(colours['dark_grey'])
+        if self.initialisation_text.rect.topleft[0] < SWIDTH:
+                current_display.update(0, (1,0))
         else:
-            if self.pacman.rect.y > SHEIGHT + self.pacman.rect.width // 2:
-                sleep(1)
-                self.init_before_level("level 1")
-        if self.pacman.ghost_collide():
-            self.state = "end"
-            sleep(0.5)
-        self.pacman.get_score(pellet_group)
+            Walls('start_H', (SWIDTH/20, SHEIGHT/10), 'light_yellow', start_menu_frames)
+            Walls('start_H', (SWIDTH/20, 9*SHEIGHT/10), 'light_yellow', start_menu_frames)
+            Walls('start_V', (SWIDTH/20, SHEIGHT/10), 'light_yellow', start_menu_frames)
+            Walls('start_V', (9*SWIDTH/20, SHEIGHT/10), 'light_yellow', start_menu_frames)
+            start_menu_map = rand_level_maker(start_num_row,start_num_col)
+            for row_index, row in enumerate(start_menu_map):
+                for col_index, col in enumerate(row):
+                    x = SWIDTH/20 + 3 + col_index * (40*SWIDTH/100) / start_num_row
+                    y = (SHEIGHT/10 + row_index
+                        * (80*SHEIGHT/100)
+                        / start_num_col
+                    )
+                    if col == "v":
+                        Walls("menu_V", (x, y),'light_yellow', start_menu_frames)
+                    elif col == "h":
+                        Walls("menu_H", (x, y),'light_yellow', start_menu_frames)
+            self.state = 'start_menu'
         pacman_group.update(self.state)
         pacman_group.draw(screen)
+        current_display.draw(screen)
+        sleep(0.1)
+
+    def start_menu(self):
+        start_menu_frames.draw(screen)
         pg.display.update()
-
-    def level_1_setup(self):
-        self.counter = 0
-        test_map_1 = rand_level_maker()
-        self.obstacles_map_1 = self.map(test_map_1)
-        test_map_2 = rand_level_maker()
-        self.obstacles_map_2 = self.map(test_map_2)
-        setit(num_pel_row_column)
-        self.pacman.condition((0, self.dis_level.get_height(), WIDTH, HEIGHT))
-        for row_index, row in enumerate(test_map_1):
-            for col_index, col in enumerate(row):
-                x = 3 + col_index * WIDTH / num_pel_row_column
-                y = (
-                    self.dis_level.get_height()
-                    + row_index
-                    * (HEIGHT - self.dis_level.get_height())
-                    / num_pel_row_column
-                )
-                if col == "v":
-                    Walls("vertical", (x, y), visible_obstacles)
-                elif col == "h":
-                    Walls("horizontal", (x, y), visible_obstacles)
-        for row_index, row in enumerate(test_map_2):
-            for col_index, col in enumerate(row):
-                x = 3 + col_index * WIDTH / num_pel_row_column
-                y = (
-                    self.dis_level.get_height()
-                    + row_index
-                    * (HEIGHT - self.dis_level.get_height())
-                    / num_pel_row_column
-                )
-                if col == "v":
-                    Walls("vertical", (x, y), visible_obstacles_2)
-                elif col == "h":
-                    Walls("horizontal", (x, y), visible_obstacles_2)
-
-    def map_toggle(self):
-        self.counter += 1
-        if self.counter > 500:
-            self.counter = 0
-        if self.counter > 250:
-            visible_obstacles.draw(screen)
-            for ghost in ghosts_group.sprites():
-                ghost.wall_collide(visible_obstacles)
-                ghost.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
-            self.pacman.wall_collide(visible_obstacles)
-        else:
-            visible_obstacles_2.draw(screen)
-            for ghost in ghosts_group.sprites():
-                ghost.wall_collide(visible_obstacles_2)
-                ghost.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
-            self.pacman.wall_collide(visible_obstacles_2)
+        sleep(2)
+        self.init_before_level('level 1')
 
     def init_before_level(self, level):
         self.level_number += 1
@@ -543,20 +475,116 @@ class GameState:
             )
         self.level_1_setup()
 
+    def level_1_setup(self):
+        self.counter = 0
+        test_map_1 = rand_level_maker()
+        self.obstacles_map_1 = self.map(test_map_1)
+        test_map_2 = rand_level_maker()
+        self.obstacles_map_2 = self.map(test_map_2)
+        setit(num_row)
+        self.pacman.condition((0, self.dis_level.get_height(), WIDTH, HEIGHT))
+        for row_index, row in enumerate(test_map_1):
+            for col_index, col in enumerate(row):
+                x = 3 + col_index * WIDTH / num_row
+                y = (
+                    self.dis_level.get_height()
+                    + row_index
+                    * (HEIGHT - self.dis_level.get_height())
+                    / num_col
+                )
+                if col == "v":
+                    Walls("vertical", (x, y),'dark_teal', visible_obstacles)
+                elif col == "h":
+                    Walls("horizontal", (x, y),'dark_teal', visible_obstacles)
+        for row_index, row in enumerate(test_map_2):
+            for col_index, col in enumerate(row):
+                x = 3 + col_index * WIDTH / num_row
+                y = (
+                    self.dis_level.get_height()
+                    + row_index
+                    * (HEIGHT - self.dis_level.get_height())
+                    / num_col
+                )
+                if col == "v":
+                    Walls("vertical", (x, y), 'dark_red', visible_obstacles_2)
+                elif col == "h":
+                    Walls("horizontal", (x, y), 'dark_red', visible_obstacles_2)
+        
+        #Framework walls
+        Walls('big_H', (0, dis_level_height -3), 'dark_red', visible_obstacles_2)
+        Walls('small_H', (0, HEIGHT),  'dark_red', visible_obstacles_2)
+        Walls('small_V', (0,dis_level_height), 'dark_red', visible_obstacles_2)
+        Walls('big_V', (SWIDTH-3,0), 'dark_red', visible_obstacles_2)
+        Walls('small_V', (WIDTH, dis_level_height), 'dark_red', visible_obstacles_2)
+        Walls('big_H', (0, dis_level_height -3), 'dark_teal', visible_obstacles)
+        Walls('small_H', (0, HEIGHT),  'dark_teal', visible_obstacles)
+        Walls('small_V', (0,dis_level_height), 'dark_teal', visible_obstacles)
+        Walls('big_V', (SWIDTH-3,0), 'dark_teal', visible_obstacles)
+        Walls('small_V', (WIDTH, dis_level_height), 'dark_teal', visible_obstacles)
+
+    def level_1(self):
+        self.dis_level = InGame_FONT.render(
+            f"Level - {self.level_number}", 1, colours["perk_green"]
+        )
+        self.display_score = Score_FONT.render(
+            f"G:{30*self.pacman.score}", 1, colours["light_orange"]
+        )
+        screen.fill(colours["black"])
+        screen.fill(colours["dark_grey"], (0, 0, SWIDTH, self.dis_level.get_height()))
+        screen.blit(self.dis_level, (WIDTH / 2 - self.dis_level.get_width() / 2, 0))
+        screen.blit(
+            self.display_score,
+            (
+                SWIDTH - 1.5 * self.display_score.get_width(),
+                self.dis_level.get_height() / 2 - self.display_score.get_height() / 2,
+            ),
+        )
+        pellet_group.draw(screen)
+        if not self.level_clear and len(pellet_group) == 0:
+            self.level_clear = True
+            self.pacman.temp_switch = True
+        if not len(pellet_group) == 0:
+            self.map_toggle()
+            ghosts_group.draw(screen)
+        else:
+            self.last_map.draw(screen)
+            if self.pacman.rect.y > SHEIGHT + self.pacman.rect.width // 2:
+                sleep(1)
+                self.init_before_level("level 1")
+        if self.pacman.ghost_collide():
+            self.state = "end"
+            sleep(0.5)
+        self.pacman.get_score(pellet_group)
+        pacman_group.update(self.state)
+        pacman_group.draw(screen)
+
+    def map_toggle(self):
+        self.counter += 1
+        if self.counter > 500:
+            self.counter = 0
+        if self.counter > 250:
+            visible_obstacles.draw(screen)
+            self.last_map = visible_obstacles
+            for ghost in ghosts_group.sprites():
+                ghost.wall_collide(visible_obstacles)
+                ghost.findpath(self.obstacles_map_1, get_cell(self.pacman.rect.center))
+            self.pacman.wall_collide(visible_obstacles)
+        else:
+            visible_obstacles_2.draw(screen)
+            self.last_map = visible_obstacles_2
+            for ghost in ghosts_group.sprites():
+                ghost.wall_collide(visible_obstacles_2)
+                ghost.findpath(self.obstacles_map_2, get_cell(self.pacman.rect.center))
+            self.pacman.wall_collide(visible_obstacles_2)
+
     def pause_menu(self):
         # print("here", time())
         self.run = False
 
-    def end(self):
-        screen.fill(colours["dark_grey"])
-        pg.display.update()
-        sleep(3)
-        self.run = False
-
     def map(self, test_map):
         map = [
-            [1 for _ in range(2 * num_pel_row_column - 1)]
-            for _ in range(2 * num_pel_row_column - 1)
+            [1 for _ in range(2 * num_row - 1)]
+            for _ in range(2 * num_col - 1)
         ]
         for col, walls_list in enumerate(test_map):
             for row, walls in enumerate(walls_list):
@@ -568,3 +596,9 @@ class GameState:
             for y in range(1, len(map), 2):
                 map[x][y] = 0
         return map
+
+    def end(self):
+        screen.fill(colours["dark_grey"])
+        pg.display.update()
+        sleep(3)
+        self.run = False
