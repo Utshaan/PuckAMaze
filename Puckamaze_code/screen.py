@@ -101,7 +101,7 @@ walls_type = dict(
     small_V=(3, HEIGHT),
     start_H=(SWIDTH*40/100, 3),
     start_V=(3, SHEIGHT*80/100),
-    menu_V=(3, ((80*HEIGHT/100) / start_num_col)+1),
+    menu_V=(3, ((80*HEIGHT/100) / start_num_col)+3),
     menu_H=(((40*SWIDTH/100)/ start_num_row)+1, 3),
 )
 

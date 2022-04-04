@@ -4,6 +4,7 @@ import os
 from time import sleep, time
 import random
 from pathfinding.core.grid import Grid
+from buttons import Button
 from pathfinding.finder.a_star import AStarFinder
 from math import log10
 from screen import *
@@ -65,6 +66,34 @@ def rand_level_maker(row_len:int = num_row, col_len:int = num_col) -> None:
     map_level[1][0] = " "
     return map_level
 
+def menu_cycle(buttons: tuple, current: int = 0) -> int:
+    keys = pg.key.get_pressed()
+    down = False
+    if keys[pg.K_DOWN]:
+        sleep(0.2)
+        buttons[current].hovering = False
+        current += 1
+        current = current%len(buttons)
+        down = True
+    if keys[pg.K_UP]:
+        sleep(0.2)
+        buttons[current].hovering = False
+        current -= 1
+        current = current%len(buttons)
+        down = True
+    if keys[pg.K_SPACE]:
+        buttons[current].pressed = True
+        down = True
+    if not down:
+        for button in buttons:
+            if button.pressed:
+                button.released = True
+                button.pressed = False
+            else:
+                button.released = False
+        buttons[current].hovering = True
+    return current
+
 
 class Pacman(pg.sprite.Sprite):
     def __init__(self, x: int, y: int, image: pg.Surface, *groups, score=-1) -> None:
@@ -102,13 +131,15 @@ class Pacman(pg.sprite.Sprite):
         self.control()
         if scene == "initialisation" or scene == 'initialisation_2':
             self.animefy((pacman_init_image, pacman_init_close))
-        elif scene == "level 1":
+        elif scene == "level 1" or scene == 'start_menu':
             if self.temp_switch:
                 self.temp_switch = False
                 self.condition(
                     (WIDTH, dis_level_height, SWIDTH, SHEIGHT + 2 * self.rect.height)
                 )
                 self.rect.topleft = (WIDTH + 3, dis_level_height)
+            self.animefy(self.animating_tuple, 0.05)
+        elif scene == 'start_menu':
             self.animefy(self.animating_tuple, 0.05)
 
     def animefy(self, images, speed=0.2) -> None:
@@ -424,6 +455,18 @@ class GameState:
             Walls('start_V', (SWIDTH/20, SHEIGHT/10), 'light_yellow', start_menu_frames)
             Walls('start_V', (9*SWIDTH/20, SHEIGHT/10), 'light_yellow', start_menu_frames)
             start_menu_map = rand_level_maker(start_num_row,start_num_col)
+            self.play_button = Button('Play', (3*SWIDTH/4, SHEIGHT/4), InGame_FONT,color=colours['light_orange'])
+            self.settings_button = Button('Settings', (3*SWIDTH/4, 2*SHEIGHT/4), InGame_FONT,color=colours['light_orange'])
+            self.exit_button = Button('Exit', (3*SWIDTH/4, 3*SHEIGHT/4), InGame_FONT,color=colours['light_orange'])
+            self.buttons = (self.play_button, self.settings_button, self.exit_button)
+            self.current_button = 0
+            self.pacman = Pacman(
+                SWIDTH/20 + self.pacman.rect.w // 2,
+                SHEIGHT/10 + self.pacman.rect.h // 2,
+                pacman_right,
+                pacman_group,
+                score=self.pacman.score,
+            )
             for row_index, row in enumerate(start_menu_map):
                 for col_index, col in enumerate(row):
                     x = SWIDTH/20 + 3 + col_index * (40*SWIDTH/100) / start_num_row
@@ -442,10 +485,24 @@ class GameState:
         sleep(0.1)
 
     def start_menu(self):
+        screen.fill(colours['dark_grey'])
         start_menu_frames.draw(screen)
-        pg.display.update()
-        sleep(2)
-        self.init_before_level('level 1')
+        self.current_button = menu_cycle(self.buttons, self.current_button)
+        for button in self.buttons:
+            if button.released:
+                match button.text:
+                    case 'Play':
+                        self.init_before_level('level 1')
+                    case 'Settings':
+                        pass
+                    case 'Exit':
+                        self.state = 'end'
+        pacman_group.update(self.state)
+        self.pacman.wall_collide(start_menu_frames)
+        pacman_group.draw(screen)
+        self.settings_button.update()
+        self.play_button.update()
+        self.exit_button.update()
 
     def init_before_level(self, level):
         self.level_number += 1
