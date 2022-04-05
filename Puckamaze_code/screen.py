@@ -16,13 +16,17 @@ colours = dict(
     dark_grey=(23, 23, 23),
     dark_teal=(14, 120, 120),
     light_yellow=(255, 235, 149),
+    dark_blue=(33, 43, 66),
 )
 
 speed_picker = dict(red=0.8, pink=1, green=0.9)
 
 InGame_FONT = pg.font.SysFont("couriernew", 50)
 DISPLAY_FONT = pg.font.Font(os.path.join("Assets", "PAC-FONT.TTF"), 80)
+END_FONT = pg.font.SysFont('couriernew', 40)
+menu_name_FONT = pg.font.SysFont('couriernew', 50)
 Score_FONT = pg.font.SysFont("couriernew", 30)
+Name_FONT = pg.font.Font(os.path.join("Assets", "PAC-FONT.TTF"), 50)
 game_name_blink = DISPLAY_FONT.render("Mr.Pacman", 1, colours["black"])
 game_name = DISPLAY_FONT.render("Mr.Pacman", 1, colours["light_orange"])
 game_name_width, game_name_height = game_name.get_width(), game_name.get_height()
@@ -85,6 +89,7 @@ start_num_row, start_num_col = 3,5
 
 pacman_group = pg.sprite.GroupSingle()
 current_display = pg.sprite.GroupSingle()
+multiple_displays = pg.sprite.Group()
 pellet_group = pg.sprite.Group()
 visible_obstacles = pg.sprite.Group()
 visible_obstacles_2 = pg.sprite.Group()
@@ -107,4 +112,5 @@ walls_type = dict(
 
 shuffle_list = (" ", " ", " ", " ", "v", "h", "v", "h")
 
-pg.mixer.music.load(os.path.join("Assets", "intro_music.wav"))
+END_MUSIC = pg.USEREVENT_DROPFILE + 314
+pg.mixer.music.set_endevent(END_MUSIC)
