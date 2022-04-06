@@ -376,7 +376,7 @@ class Walls(pg.sprite.Sprite):
 class GameState:
     def __init__(self) -> None:
         self.run = True
-        self.player_name = ''
+        self.player_name = 'Player_1'
         self.state = "initialisation"
         self.revertable_state = "pause_menu"
         self.pacman = Pacman(
@@ -432,8 +432,9 @@ class GameState:
                             self.player_name += event.unicode
                             self.player_name = self.player_name.upper()
                     else:
-                        self.music = True
-                        self.init_before_level('level 1')
+                        if len(self.player_name) > 0 and set(self.player_name) != {' '}:
+                            self.music = True
+                            self.init_before_level('level 1')
                 elif event.type == pg.KEYUP:
                     if event.key == pg.K_BACKSPACE:
                         self.backspace = False
@@ -545,7 +546,7 @@ class GameState:
             if button.released:
                 match button.text:
                     case 'Play':
-                        name = MONOSPACE_FONT.render(f'Name:', 1, colours["light_orange"])
+                        name = MONOSPACE_FONT.render(f'Name:{self.player_name}', 1, colours["light_orange"])
                         DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [name], current_display)
                         self.name_border_points = ((SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20 , 5*SHEIGHT/12), (SWIDTH/20,5*SHEIGHT/12))
                         self.state = 'information'
