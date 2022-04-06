@@ -556,10 +556,10 @@ class GameState:
                         self.state = 'end'
                     case _:
                         pass
-                self.volume_button = SettingsButton('Volume', (SWIDTH/2, SHEIGHT/4), END_FONT,color=colours['light_yellow'])
+                self.music_button = SettingsButton('Music', (SWIDTH/2, SHEIGHT/4), END_FONT,color=colours['light_yellow'])
                 self.reset_button = Button('Reset Scores', (SWIDTH/2, 2*SHEIGHT/4), END_FONT, color=colours['light_yellow'])
                 self.back_button = Button('Back', (SWIDTH/2, 3*SHEIGHT/4), END_FONT,color=colours['light_yellow'])
-                self.settings_buttons = (self.volume_button, self.reset_button, self.back_button)
+                self.settings_buttons = (self.music_button, self.reset_button, self.back_button)
         pacman_group.update(self.state)
         self.pacman.wall_collide(start_menu_frames)
         pacman_group.draw(screen)
@@ -570,7 +570,7 @@ class GameState:
     def settings(self):
         screen.fill(colours['black'])
         self.button_info = menu_cycle(self.settings_buttons, self.button_info)
-        self.volume_button.update()
+        self.music_button.update()
         self.reset_button.update()
         self.back_button.update()
         for button in self.settings_buttons[1:]:
@@ -580,7 +580,7 @@ class GameState:
                         pass
                     case 'Back':
                         self.state = self.previous_settings_window
-        if self.volume_button.selected:
+        if self.music_button.selected:
             pg.mixer.music.set_volume(1)
         else:
             pg.mixer.music.set_volume(0)
