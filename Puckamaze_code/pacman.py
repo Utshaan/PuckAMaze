@@ -26,7 +26,6 @@ def setit(number: int) -> None:
             pellet_group,
         )
 
-
 def get_cell(pos: tuple) -> tuple:
     x_cell = num_row * pos[0] // WIDTH
     y_cell = (
@@ -36,7 +35,6 @@ def get_cell(pos: tuple) -> tuple:
     )
     return (2 * x_cell, 2 * y_cell)
 
-
 def get_coord(x: int, y: int) -> tuple:
     absc = x * WIDTH // (2 * num_row) + WIDTH // (2 * num_row)
     oord = (
@@ -45,7 +43,6 @@ def get_coord(x: int, y: int) -> tuple:
         + (HEIGHT - dis_level_height) // (2 * num_col)
     )
     return (absc, oord)
-
 
 def rand_level_maker(row_len:int = num_row, col_len:int = num_col) -> None:
     map_level = []
@@ -238,12 +235,12 @@ class Ghosts(pg.sprite.Sprite):
         super().__init__(*groups)
         self.color = color
         self.image = pg.transform.scale(
-            pg.image.load(os.path.join("Assets", f"ghost_{self.color}.png")),
+            pg.image.load(os.path.join("Assets\Images", f"ghost_{self.color}.png")),
             (637 / 20, 673 / 20),
         )
         self.image1 = self.image
         self.image2 = pg.transform.scale(
-            pg.image.load(os.path.join("Assets", f"ghost_{self.color}2.png")),
+            pg.image.load(os.path.join("Assets\Images", f"ghost_{self.color}2.png")),
             (637 / 20, 673 / 20),
         )
         self.sprites = (self.image1, self.image2)
@@ -354,7 +351,7 @@ class PowerPellets(pg.sprite.Sprite):
     def __init__(self, x, y, *groups) -> None:
         super().__init__(*groups)
         self.x, self.y = x, y
-        self.image = pg.image.load(os.path.join("Assets", "pellet.png")).convert_alpha()
+        self.image = pg.image.load(os.path.join("Assets\Images", "pellet.png")).convert_alpha()
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
 
@@ -398,7 +395,11 @@ class GameState:
         self.level_number = 0
         self.dis_level = dis_level
         self.music = True
+        self.backspace = False
+        self.delayed_backspace = False
         self.last_map = visible_obstacles
+        self.prohibited_keys = (pg.K_ESCAPE, pg.K_TAB)
+        self.t_original = 0
 
     def scene_manager(self) -> None:
         for event in pg.event.get():
@@ -407,26 +408,37 @@ class GameState:
             if event.type == END_MUSIC:
                 match self.state:
                     case 'level 1':
-                        pg.mixer.music.load(os.path.join("Assets", "game_music.wav"))
+                        pg.mixer.music.load(os.path.join("Assets\Music", "game_music.wav"))
                     case 'finish':
-                        pg.mixer.music.load(os.path.join("Assets", "Track 3.wav"))
+                        pg.mixer.music.load(os.path.join("Assets\Music", "Track 3.wav"))
                     case _:
-                        pg.mixer.music.load(os.path.join("Assets", "Funk in G Major.wav"))
+                        pg.mixer.music.load(os.path.join("Assets\Music", "Funk in G Major.wav"))
                 pg.mixer.music.play(-1)
 
             elif event.type == pg.KEYUP and event.key == pg.K_ESCAPE and self.state == 'level 1':
                 self.music = True
                 self.revertable_state, self.state = self.state, self.revertable_state
-            elif self.state == 'information' and event.type == pg.KEYDOWN:
-                if event.key == pg.K_BACKSPACE:
-                    self.player_name = self.player_name[:-1]
-                elif event.key != pg.K_RETURN:
-                    self.player_name += event.unicode
-                else:
-                    self.music = True
-                    self.init_before_level('level 1')
-                name = menu_name_FONT.render(f'Name: {self.player_name}', 1, colours["light_orange"])
-                DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - menu_name_FONT.get_height(), [name], current_display)
+            elif event.type == pg.KEYUP and event.key == pg.K_ESCAPE and self.state == 'information':
+                self.player_name = ''
+                self.state = 'start_menu'
+            elif self.state == 'information':
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_BACKSPACE:
+                        self.backspace = True
+                        self.delayed_backspace = True
+                        self.t_original = time()
+                    elif event.key != pg.K_RETURN:
+                        if event.key not in self.prohibited_keys and len(self.player_name)<16:
+                            self.player_name += event.unicode
+                            self.player_name = self.player_name.upper()
+                    else:
+                        self.music = True
+                        self.init_before_level('level 1')
+                elif event.type == pg.KEYUP:
+                    if event.key == pg.K_BACKSPACE:
+                        self.backspace = False
+                        self.delayed_backspace = False
+                        self.t_original=0
         match self.state:
             case "initialisation":
                 self.initialisation()
@@ -435,7 +447,7 @@ class GameState:
             case 'start_menu':
                 if self.music:
                     pg.mixer.music.fadeout(1000)
-                    pg.mixer.music.load(os.path.join("Assets", "Funk in G Major.wav"))
+                    pg.mixer.music.load(os.path.join("Assets\Music", "Funk in G Major.wav"))
                     pg.mixer.music.play(-1)
                     self.music = False
                 self.start_menu()
@@ -533,9 +545,9 @@ class GameState:
             if button.released:
                 match button.text:
                     case 'Play':
-                        name = menu_name_FONT.render(f'Name: ', 1, colours["light_orange"])
-                        DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - menu_name_FONT.get_height(), [name], current_display)
-                        self.name_border_points = ((SWIDTH/20, 5*SHEIGHT/12 - menu_name_FONT.get_height()), (19*SWIDTH/20, 5*SHEIGHT/12 - menu_name_FONT.get_height()), (19*SWIDTH/20 , 5*SHEIGHT/12), (SWIDTH/20,5*SHEIGHT/12))
+                        name = MONOSPACE_FONT.render(f'Name:', 1, colours["light_orange"])
+                        DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [name], current_display)
+                        self.name_border_points = ((SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20 , 5*SHEIGHT/12), (SWIDTH/20,5*SHEIGHT/12))
                         self.state = 'information'
                     case 'Settings':
                         self.previous_settings_window = self.state
@@ -573,14 +585,19 @@ class GameState:
         else:
             pg.mixer.music.set_volume(0)
 
-
-
     def information(self):
+        del_time = time()-self.t_original
+        if (del_time>0.3) and self.delayed_backspace:
+            self.player_name = self.player_name[:-1]
+        if self.backspace:
+            self.player_name = self.player_name[:-1]
+            self.backspace = False
+        name = MONOSPACE_FONT.render(f'Name:{self.player_name}', 1, colours["light_orange"])
+        DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [name], current_display)
         pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
-        screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, menu_name_FONT.get_height()))
+        screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
         current_display.update(speed=0)
         current_display.draw(screen)
-
 
     def init_before_level(self, level):
         self.level_number += 1
@@ -744,12 +761,12 @@ class GameState:
         return map
 
     def end(self):
-        name = Name_FONT.render(f'Name: {self.player_name}', 1, colours["light_orange"])
+        name = Name_FONT.render(f'NAME: {self.player_name}', 1, colours["light_orange"])
         text = END_FONT.render(f'Your Score : {self.pacman.score}', 1, colours['light_yellow'])
         text_2 = END_FONT.render(f'Press Esc to Exit', 1, colours['light_yellow'])
         DisplayingName((SWIDTH/2) - name.get_width()/2,SHEIGHT/4 - name.get_height()/2, [name], multiple_displays)
-        DisplayingName((SWIDTH/2) - text.get_width()/2,2*SHEIGHT/4 - text.get_height()/2, [text], multiple_displays)
-        DisplayingName((SWIDTH/2) - text_2.get_width()/2,3*SHEIGHT/4 - text_2.get_height()/2, [text_2], multiple_displays)
+        DisplayingName((SWIDTH/2) - text.get_width()/2,3*SHEIGHT/5 - text.get_height()/2, [text], multiple_displays)
+        DisplayingName((SWIDTH/2) - text_2.get_width()/2,4*SHEIGHT/5 - text_2.get_height()/2, [text_2], multiple_displays)
         self.state = 'finish'
         self.music = True
     
