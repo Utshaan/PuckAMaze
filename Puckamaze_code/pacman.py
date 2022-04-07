@@ -162,7 +162,7 @@ class Pacman(pg.sprite.Sprite):
             group (group): The group to check collision with
         """
         if pg.sprite.spritecollide(self, group, True):
-            self.score += 30
+            self.score += 19
 
     def wall_collide(self, group) -> None:
         """check collision with walls in particular
@@ -376,7 +376,7 @@ class Walls(pg.sprite.Sprite):
 class GameState:
     def __init__(self) -> None:
         self.run = True
-        self.player_name = 'Player_1'
+        self.player_name = 'PLAYER_1'
         self.state = "initialisation"
         self.revertable_state = "pause_menu"
         self.pacman = Pacman(
