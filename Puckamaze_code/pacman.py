@@ -194,7 +194,7 @@ class Pacman(pg.sprite.Sprite):
                     self.rect.bottom = sprite.rect.top
 
     def ghost_collide(self) -> None:
-        return pg.sprite.spritecollide(self, ghosts_group, False)
+        return pg.sprite.groupcollide(pacman_group, ghosts_group, False, False, collided=pg.sprite.collide_rect_ratio(0.8))
 
     def control(self) -> None:
         """checks for all controls. needs no inputs"""
@@ -237,14 +237,14 @@ class Ghosts(pg.sprite.Sprite):
         self.image = pg.transform.scale(
             pg.image.load(os.path.join("Assets\Images", f"ghost_{self.color}.png")),
             (637 / 20, 673 / 20),
-        )
+        ).convert_alpha()
         self.image1 = self.image
         self.image2 = pg.transform.scale(
             pg.image.load(os.path.join("Assets\Images", f"ghost_{self.color}2.png")),
             (637 / 20, 673 / 20),
-        )
+        ).convert_alpha()
         self.sprites = (self.image1, self.image2)
-        self.rect = self.image.get_rect(center=(x, y))
+        self.rect = self.image1.get_rect(center=(x,y))
         self.pos = self.rect.center
         self.speed = speed_picker[color] * log10(speed_multiplier)
         self.direction = pg.math.Vector2(0, 0)

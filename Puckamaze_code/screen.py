@@ -43,46 +43,46 @@ pacman_left = pg.transform.rotate(
         pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
     ),
     180,
-)
+).convert_alpha()
 pacman_down = pg.transform.rotate(
     pg.transform.scale(
         pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
     ),
     270,
-)
+).convert_alpha()
 pacman_right = pg.transform.rotate(
     pg.transform.scale(
         pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
     ),
     0,
-)
+).convert_alpha()
 pacman_up = pg.transform.rotate(
     pg.transform.scale(
         pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
     ),
     90,
-)
+).convert_alpha()
 pac_close = pg.transform.scale(
     pg.image.load(os.path.join("Assets\Images", "pacman_close.png")), (673 / 20, 721 / 20)
-)
+).convert_alpha()
 pac_close_R = pg.transform.scale(
     pg.image.load(os.path.join("Assets\Images", "pacman_close_R.png")),
     (673 / 20, 721 / 20),
-)
+).convert_alpha()
 pellet_image = pg.image.load(os.path.join("Assets\Images", "pellet.png")).convert_alpha()
 pacman_init_image = pg.transform.rotate(
     pg.transform.scale(
         pg.image.load(os.path.join("Assets\Images", "pacman.png")), (637 / 10, 721 / 10)
     ),
     180,
-)
+).convert_alpha()
 pacman_init_close = pg.transform.rotate(
     pg.transform.scale(
         pg.image.load(os.path.join("Assets\Images", "pacman_close.png")),
         (637 / 10, 721 / 10),
     ),
     180,
-)
+).convert_alpha()
 
 # num_pel_row_column = 7
 num_row, num_col = 7, 7
