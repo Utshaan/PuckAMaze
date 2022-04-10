@@ -1,8 +1,4 @@
-import pygame as pg
-from pacman import GameState
-from screen import *
-import os
-
+from gamecode import GameState, pg, os
 
 FPS = 60
 clock = pg.time.Clock()
