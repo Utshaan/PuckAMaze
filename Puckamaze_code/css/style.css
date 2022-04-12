@@ -1,0 +1,97 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+.bodies {
+    background-color: rgb(51, 68, 57);
+    font-family: "Lobster", monospace;
+    display: flex;
+}
+
+.display {
+    position: relative;
+    display:table-caption;
+    width: 100%;
+    background-color: rgb(44, 43, 43);
+    color: rgb(56, 219, 214);
+    text-align: center;
+    font-size: 70px;
+
+}
+
+.image_div img{
+    position:absolute;
+    background-color: green;
+    border: 3px solid #00a39d;
+    top: 20%;
+    left: 5%;
+    text-align: justify;
+}
+
+
+.main_tables {
+    display:flexbox;
+    position: absolute;
+    top: 100px;
+    left: 30%;
+    /* height: 100%; */
+    width: 40%;
+    border: 3px;
+    border-radius: 5px;
+    background-color: rgb(117, 58, 58);
+    text-align: center;
+}
+
+.search {
+    display: flexbox;
+    width: 40%;
+    background-color: rgb(93, 86, 86);
+    position: absolute;
+    top: 60%;
+    left: 30%;
+}
+.search input{
+    position: relative;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 200%;
+    font-family: "Share Tech Mono",monospace;
+    width: 60%;
+    background-color: rgb(91, 114, 45);
+    left: 16%;
+}
+
+.search button{
+    position: relative;
+    height: 30px;
+    left: 16%;
+    top: -5px;
+    background-color: #00a39d;
+}
+
+.scores {
+    position: relative;
+    width: 100%;
+    font-size: 259%;
+    text-align: right;
+}
+
+
+table {
+    font-family: "Share Tech Mono", monospace;
+    border: 5px solid #6b9f9fc7;
+    border-collapse: collapse;
+    border-style:groove;
+}
+
+th {
+    border: 4px solid #6b9f9fc7;
+    border-style: groove;
+    text-align: center;
+}
+
+td{
+    border: 2px solid #6b9f9fc7;
+    border-style: groove;
+}

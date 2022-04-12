@@ -7,6 +7,7 @@ from functions import *
 from buttons import Button, SettingsButton
 from ghosts import Ghosts
 from random import randint, choice
+from py_to_html import Html_handler
 
 class GameState:
     def __init__(self) -> None:
@@ -399,7 +400,7 @@ class GameState:
     def end(self):
         name = Name_FONT.render(f'NAME: {self.player_name}', 1, colours["light_orange"])
         text = END_FONT.render(f'Your Score : {self.pacman.score}', 1, colours['light_yellow'])
-        text_2 = END_FONT.render(f'Press Esc to Exit', 1, colours['light_yellow'])
+        text_2 = END_FONT.render(f'Press Esc to Sync and Exit', 1, colours['light_yellow'])
         DisplayingName((SWIDTH/2) - name.get_width()/2,SHEIGHT/4 - name.get_height()/2, [name], multiple_displays)
         DisplayingName((SWIDTH/2) - text.get_width()/2,3*SHEIGHT/5 - text.get_height()/2, [text], multiple_displays)
         DisplayingName((SWIDTH/2) - text_2.get_width()/2,4*SHEIGHT/5 - text_2.get_height()/2, [text_2], multiple_displays)
@@ -411,4 +412,9 @@ class GameState:
         multiple_displays.update(speed = 0)
         multiple_displays.draw(screen)
         if pg.key.get_pressed()[pg.K_ESCAPE]:
+            with open("index.html") as htmlFile:
+                handler = Html_handler(htmlFile)
+            handler.update(self.pacman.score, self.player_name)
+            with open("index.html", "w", encoding="utf-8") as change:
+                change.write(str(handler.file))
             self.run = False
