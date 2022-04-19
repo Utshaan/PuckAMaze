@@ -1,3 +1,4 @@
+import sys
 import pygame as pg
 import os
 
@@ -6,6 +7,9 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 WIDTH, HEIGHT = 600, 500
 SWIDTH, SHEIGHT = 750, 515
 screen = pg.display.set_mode((SWIDTH, SHEIGHT), pg.RESIZABLE)
+
+if getattr(sys, 'frozen', False):
+    os.chdir(sys._MEIPASS)
 
 colours = dict(
     black=(0, 0, 0),
@@ -33,10 +37,6 @@ game_name = DISPLAY_FONT.render("Mr.Pacman", 1, colours["light_orange"])
 game_name_width, game_name_height = game_name.get_width(), game_name.get_height()
 dis_level = InGame_FONT.render(f"Level - 1", 1, colours["perk_green"])
 dis_level_height = dis_level.get_height()
-# background = pg.transform.scale(
-#     pg.image.load(os.path.join("Assets\Images", "map.jpg")), (SWIDTH, SHEIGHT)
-# )
-# icon = pg.image.load(os.path.join("Assets\Images", "icon.png"))
 
 pacman_left = pg.transform.rotate(
     pg.transform.scale(
