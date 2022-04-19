@@ -8,11 +8,13 @@ from buttons import Button, SettingsButton
 from ghosts import Ghosts
 from random import randint, choice
 from py_to_html import Html_handler
+from py_to_json import JSON_handler, json
 
 class GameState:
     def __init__(self) -> None:
         self.run = True
         self.player_name = 'PLAYER_1'
+        self.player_passw = ''
         self.state = "initialisation"
         self.revertable_state = "pause_menu"
         self.pacman = Pacman(
@@ -34,8 +36,11 @@ class GameState:
         self.backspace = False
         self.delayed_backspace = False
         self.last_map = visible_obstacles
-        self.prohibited_keys = (pg.K_ESCAPE, pg.K_TAB)
+        self.prohibited_keys = (pg.K_ESCAPE, pg.K_TAB, pg.K_SPACE)
         self.t_original = 0
+        self.name_condition_singlepress = False
+        with open('Assets/passwords.json') as file:
+            self.password_checker = JSON_handler(file)
 
     def scene_manager(self) -> None:
         for event in pg.event.get():
@@ -57,8 +62,14 @@ class GameState:
             elif event.type == pg.KEYUP and event.key == pg.K_ESCAPE and self.state == 'information':
                 self.player_name = ''
                 self.state = 'start_menu'
+            elif event.type == pg.KEYUP and event.key == pg.K_ESCAPE and self.state == 'password':
+                self.player_passw = ''
+                self.state = 'information'
             elif self.state == 'information':
                 if event.type == pg.KEYDOWN:
+                    if not self.name_condition_singlepress:
+                        self.player_name = ''
+                        self.name_condition_singlepress = True
                     if event.key == pg.K_BACKSPACE:
                         self.backspace = True
                         self.delayed_backspace = True
@@ -69,13 +80,95 @@ class GameState:
                             self.player_name = self.player_name.upper()
                     else:
                         if len(self.player_name) > 0 and set(self.player_name) != {' '}:
-                            self.music = True
-                            self.init_before_level('level 1')
+                            self.state = 'password'
                 elif event.type == pg.KEYUP:
                     if event.key == pg.K_BACKSPACE:
                         self.backspace = False
                         self.delayed_backspace = False
                         self.t_original=0
+            elif self.state == 'password':
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_BACKSPACE:
+                        self.backspace = True
+                        self.delayed_backspace = True
+                        self.t_original = time()
+                    elif event.key != pg.K_RETURN:
+                        if event.key not in self.prohibited_keys and len(self.player_passw)<16:
+                            self.player_passw += event.unicode
+                    else:
+                        if len(self.player_passw) > 0 and set(self.player_passw) != {' '} and self.password_checker.check(self.player_name, self.player_passw):
+                            self.music = True
+                            self.init_before_level('level 1')
+                        else:
+                            self.state = 'information'
+                            self.player_passw = ''
+                elif event.type == pg.KEYUP:
+                    if event.key == pg.K_BACKSPACE:
+                        self.backspace = False
+                        self.delayed_backspace = False
+                        self.t_original=0
+            elif self.state == 'reseting password':
+                if self.reset_scene == 'name':
+                    if event.type == pg.KEYDOWN:
+                        if not self.name_condition_singlepress:
+                            self.player_name = ''
+                            self.name_condition_singlepress = True
+                        if event.key == pg.K_BACKSPACE:
+                            self.backspace = True
+                            self.delayed_backspace = True
+                            self.t_original = time()
+                        elif event.key != pg.K_RETURN:
+                            if event.key not in self.prohibited_keys and len(self.player_name)<16:
+                                self.player_name += event.unicode
+                                self.player_name = self.player_name.upper()
+                        else:
+                            if len(self.player_name) > 0 and set(self.player_name) != {' '}:
+                                self.reset_scene = 'old_p'
+                    elif event.type == pg.KEYUP:
+                        if event.key == pg.K_BACKSPACE:
+                            self.backspace = False
+                            self.delayed_backspace = False
+                            self.t_original=0
+                elif self.reset_scene == 'old_p':
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_BACKSPACE:
+                            self.backspace = True
+                            self.delayed_backspace = True
+                            self.t_original = time()
+                        elif event.key != pg.K_RETURN:
+                            if event.key not in self.prohibited_keys and len(self.player_passw)<16:
+                                self.player_passw += event.unicode
+                        else:
+                            if len(self.player_passw) > 0 and set(self.player_passw) != {' '} and self.password_checker.check(self.player_name, self.player_passw):
+                                self.reset_scene = 'new_p'
+                                self.player_passw = ''
+                            else:
+                                self.reset_scene = 'name'
+                                self.player_passw = ''
+                    elif event.type == pg.KEYUP:
+                        if event.key == pg.K_BACKSPACE:
+                            self.backspace = False
+                            self.delayed_backspace = False
+                            self.t_original=0
+                if self.reset_scene == 'new_p':
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_BACKSPACE:
+                            self.backspace = True
+                            self.delayed_backspace = True
+                            self.t_original = time()
+                        elif event.key != pg.K_RETURN:
+                            if event.key not in self.prohibited_keys and len(self.player_passw)<16:
+                                self.player_passw += event.unicode
+                        else:
+                            if len(self.player_passw) > 0 and set(self.player_passw) != {' '}:
+                                self.music = True
+                                self.state = 'settings'
+                                self.password_checker.update(self.player_name, self.player_passw)
+                    elif event.type == pg.KEYUP:
+                        if event.key == pg.K_BACKSPACE:
+                            self.backspace = False
+                            self.delayed_backspace = False
+                            self.t_original=0
         match self.state:
             case "initialisation":
                 self.initialisation()
@@ -92,6 +185,10 @@ class GameState:
                 self.settings()
             case 'information':
                 self.information()
+            case 'password':
+                self.password()
+            case 'reseting password':
+                self.reseting_password()
             case "level 1":
                 if self.music:
                     pg.mixer.music.fadeout(1000)
@@ -135,7 +232,7 @@ class GameState:
     def initialisation_2(self):
         screen.fill(colours['dark_grey'])
         if self.initialisation_text.rect.topleft[0] < SWIDTH:
-                current_display.update(0, (1,0))
+            current_display.update(0, (1,0))
         else:
             Walls('start_H', (SWIDTH/20, SHEIGHT/10), 'light_yellow', start_menu_frames)
             Walls('start_H', (SWIDTH/20, 9*SHEIGHT/10), 'light_yellow', start_menu_frames)
@@ -149,7 +246,7 @@ class GameState:
             self.end_button = Button('Exit', (SWIDTH/2, 3*SHEIGHT/4), InGame_FONT,color=colours['turquoise'])
             self.exit_button = Button('Exit', (3*SWIDTH/4, 3*SHEIGHT/4), InGame_FONT,color=colours['light_orange'])
             self.start_buttons = (self.play_button, self.settings_button, self.exit_button)
-            self.button_info = [0,0]
+            self.button_info = [[0,0], [0,0],[0,0]]
             self.pacman = Pacman(
                 SWIDTH/20 + self.pacman.rect.w // 2,
                 SHEIGHT/10 + self.pacman.rect.h // 2,
@@ -169,6 +266,10 @@ class GameState:
                     elif col == "h":
                         Walls("menu_H", (x, y),'light_yellow', start_menu_frames)
             self.state = 'start_menu'
+            self.music_button = SettingsButton('Music', (SWIDTH/2, SHEIGHT/4), END_FONT,color=colours['light_yellow'])
+            self.reset_button = Button('Reset Password', (SWIDTH/2, 2*SHEIGHT/4), END_FONT, color=colours['light_yellow'])
+            self.back_button = Button('Back', (SWIDTH/2, 3*SHEIGHT/4), END_FONT,color=colours['light_yellow'])
+            self.settings_buttons = (self.music_button, self.reset_button, self.back_button)
         pacman_group.update(self.state)
         pacman_group.draw(screen)
         current_display.draw(screen)
@@ -177,14 +278,14 @@ class GameState:
     def start_menu(self):
         screen.fill(colours['dark_grey'])
         start_menu_frames.draw(screen)
-        self.button_info = menu_cycle(self.start_buttons, self.button_info)
+        self.button_info[0] = menu_cycle(self.start_buttons, self.button_info[0])
         for button in self.start_buttons:
             if button.released:
+                self.name_border_points = ((SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20 , 5*SHEIGHT/12), (SWIDTH/20,5*SHEIGHT/12))
                 match button.text:
                     case 'Play':
                         name = MONOSPACE_FONT.render(f'Name:{self.player_name}', 1, colours["light_orange"])
                         DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [name], current_display)
-                        self.name_border_points = ((SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height()), (19*SWIDTH/20 , 5*SHEIGHT/12), (SWIDTH/20,5*SHEIGHT/12))
                         self.state = 'information'
                     case 'Settings':
                         self.previous_settings_window = self.state
@@ -193,10 +294,6 @@ class GameState:
                         self.state = 'end'
                     case _:
                         pass
-                self.music_button = SettingsButton('Music', (SWIDTH/2, SHEIGHT/4), END_FONT,color=colours['light_yellow'])
-                self.reset_button = Button('Reset Scores', (SWIDTH/2, 2*SHEIGHT/4), END_FONT, color=colours['light_yellow'])
-                self.back_button = Button('Back', (SWIDTH/2, 3*SHEIGHT/4), END_FONT,color=colours['light_yellow'])
-                self.settings_buttons = (self.music_button, self.reset_button, self.back_button)
         pacman_group.update(self.state)
         self.pacman.wall_collide(start_menu_frames)
         pacman_group.draw(screen)
@@ -206,15 +303,16 @@ class GameState:
 
     def settings(self):
         screen.fill(colours['black'])
-        self.button_info = menu_cycle(self.settings_buttons, self.button_info)
+        self.button_info[1] = menu_cycle(self.settings_buttons, self.button_info[1])
         self.music_button.update()
         self.reset_button.update()
         self.back_button.update()
         for button in self.settings_buttons[1:]:
             if button.released:
                 match button.text:
-                    case 'Reset Scores':
-                        pass
+                    case 'Reset Password':
+                        self.state = 'reseting password'
+                        self.reset_scene = 'name'
                     case 'Back':
                         self.state = self.previous_settings_window
         if self.music_button.selected:
@@ -235,6 +333,61 @@ class GameState:
         screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
         current_display.update(speed=0)
         current_display.draw(screen)
+
+    def password(self):
+        del_time = time()-self.t_original
+        if (del_time>0.3) and self.delayed_backspace:
+            self.player_passw = self.player_passw[:-1]
+        if self.backspace:
+            self.player_passw = self.player_passw[:-1]
+            self.backspace = False
+        passw = MONOSPACE_FONT.render(f'Passw:{self.player_passw}', 1, colours["light_orange"])
+        DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [passw], current_display)
+        pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
+        screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
+        current_display.update(speed=0)
+        current_display.draw(screen)
+
+    def reseting_password(self):
+        if self.reset_scene == 'name':
+            del_time = time()-self.t_original
+            if (del_time>0.3) and self.delayed_backspace:
+                self.player_name = self.player_name[:-1]
+            if self.backspace:
+                self.player_name = self.player_name[:-1]
+                self.backspace = False
+            name = MONOSPACE_FONT.render(f'Name:{self.player_name}', 1, colours["light_orange"])
+            DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [name], current_display)
+            pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
+            screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
+            current_display.update(speed=0)
+            current_display.draw(screen)
+        if self.reset_scene == 'old_p':
+            del_time = time()-self.t_original
+            if (del_time>0.3) and self.delayed_backspace:
+                self.player_passw = self.player_passw[:-1]
+            if self.backspace:
+                self.player_passw = self.player_passw[:-1]
+                self.backspace = False
+            passw = MONOSPACE_FONT.render(f'Old P:{self.player_passw}', 1, colours["light_orange"])
+            DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [passw], current_display)
+            pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
+            screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
+            current_display.update(speed=0)
+            current_display.draw(screen)
+        if self.reset_scene == 'new_p':
+            del_time = time()-self.t_original
+            if (del_time>0.3) and self.delayed_backspace:
+                self.player_passw = self.player_passw[:-1]
+            if self.backspace:
+                self.player_passw = self.player_passw[:-1]
+                self.backspace = False
+            passw = MONOSPACE_FONT.render(f'New P:{self.player_passw}', 1, colours["light_orange"])
+            DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [passw], current_display)
+            pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
+            screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
+            current_display.update(speed=0)
+            current_display.draw(screen)
 
     def init_before_level(self, level):
         self.level_number += 1
@@ -368,7 +521,7 @@ class GameState:
 
     def pause_menu(self):
         screen.fill(colours['light_yellow'], (2*SWIDTH/10, dis_level_height + 1.275*(HEIGHT- dis_level_height)/10 - self.play_button.image.get_width()/2, 3*SWIDTH/5, 7.45*(HEIGHT- dis_level_height)/10 + self.play_button.image.get_width()))
-        self.button_info = menu_cycle([self.resume_button, self.pause_settings_button, self.end_button], self.button_info)
+        self.button_info[2] = menu_cycle([self.resume_button, self.pause_settings_button, self.end_button], self.button_info[2])
         if self.resume_button.released:
             pg.mixer.music.fadeout(1000)
             self.state, self.revertable_state = self.revertable_state, self.state
@@ -406,15 +559,21 @@ class GameState:
         DisplayingName((SWIDTH/2) - text_2.get_width()/2,4*SHEIGHT/5 - text_2.get_height()/2, [text_2], multiple_displays)
         self.state = 'finish'
         self.music = True
+        self.password_checker.update(self.player_name, self.player_passw)
     
     def finish(self):
         screen.fill(colours["dark_grey"])
         multiple_displays.update(speed = 0)
         multiple_displays.draw(screen)
         if pg.key.get_pressed()[pg.K_ESCAPE]:
-            with open("index.html") as htmlFile:
-                handler = Html_handler(htmlFile)
-            handler.update(self.pacman.score, self.player_name)
-            with open("index.html", "w", encoding="utf-8") as change:
-                change.write(str(handler.file))
+            if self.player_name != '' and self.pacman.score != 0:
+                with open("index.html") as htmlFile:
+                    hhandler = Html_handler(htmlFile)
+                hhandler.update(self.pacman.score, self.player_name)
+                with open("index.html", "w", encoding="utf-8") as change_html:
+                    change_html.write(str(hhandler.file))
+
+            with open("Assets/passwords.json", "w") as change_json:
+                json.dump(self.password_checker.file, change_json, indent=4)
+
             self.run = False

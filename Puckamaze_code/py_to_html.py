@@ -1,20 +1,15 @@
 from bs4 import BeautifulSoup
 from copy import copy
 import os
-from rich import print
-import json
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-database = json.load(open("database.json", "r"))
-x = json.load(open("database.json", "r"))
 
 
 class Html_handler:
     def __init__(self, file):
         self.file = BeautifulSoup(file, "html.parser")
         self.positions = list(
-            map(lambda x: x.string, self.file.find_all(class_="position"))
+            map(lambda x: int(x.string[:-2]), self.file.find_all(class_="position"))
         )
         self.usernames = list(
             map(lambda x: x.string, self.file.find_all(class_="username"))
@@ -24,9 +19,11 @@ class Html_handler:
 
     def update(self, score, name):
         if name in self.usernames:
-            self.file.find(
+            og_score = self.file.find(
                 class_="username", string=name
-            ).find_next_sibling().string.replace_with(str(score))
+            ).find_next_sibling().string
+            if int(og_score) < score:
+                og_score.replace_with(str(score))
         else:
             self.create_user(score, name)
         self.update_pos(name)
@@ -70,7 +67,7 @@ class Html_handler:
             )
             previous_row.insert_before(current_row)
             return self.update_pos(name)
-        elif next_row.find(class_="points") and int(
+        elif next_row and next_row.find(class_="points") and int(
             current_row.find(class_="points").string
         ) < int(next_row.find(class_="points").string):
             next_pos = int(next_row.find(class_="position").string[:-2]) - 1
@@ -94,3 +91,8 @@ class Html_handler:
                 return "rd"
             case _:
                 return "th"
+    
+    def information(self):
+        self.usernames = list(
+            map(lambda x: x.string, self.file.find_all(class_="username"))
+        )

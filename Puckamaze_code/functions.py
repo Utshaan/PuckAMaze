@@ -58,12 +58,10 @@ def menu_cycle(buttons: tuple, CnCinfo: list[int, int] = [0,0]) -> int:
     keys = pg.key.get_pressed()
     down = False
     if keys[pg.K_DOWN]:
-        # sleep(0.2)
         CnCinfo[1] = 1
         buttons[CnCinfo[0]].hovering = False
         down = True
     if keys[pg.K_UP]:
-        # sleep(0.2)
         CnCinfo[1] = -1
         buttons[CnCinfo[0]].hovering = False
         down = True
