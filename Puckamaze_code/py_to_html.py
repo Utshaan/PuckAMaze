@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
 from copy import copy
+import sys
 import os
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 
 
 class Html_handler:

@@ -1,6 +1,5 @@
 from screen import *
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 class Pacman(pg.sprite.Sprite):
     def __init__(self, x: int, y: int, image: pg.Surface, *groups, score=0) -> None:
