@@ -4,8 +4,7 @@ import sys
 import os
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-if getattr(sys, 'frozen', False):
-    os.chdir(sys._MEIPASS)
+
 
 
 class Html_handler:

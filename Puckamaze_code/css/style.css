@@ -20,6 +20,17 @@
 
 }
 
+.display_below {
+    display: flexbox;
+    position:fixed;
+    color: rgb(54, 141, 85);
+    font-size: 80px;
+    top: 20%;
+    left: 40%;
+    width: 10%;
+    height: auto;
+}
+
 .image_div img{
     display: flexbox;
     position:absolute;

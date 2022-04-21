@@ -1,4 +1,3 @@
-import sys
 import pygame as pg
 import os
 
@@ -8,8 +7,6 @@ WIDTH, HEIGHT = 600, 500
 SWIDTH, SHEIGHT = 750, 515
 screen = pg.display.set_mode((SWIDTH, SHEIGHT), pg.RESIZABLE)
 
-if getattr(sys, 'frozen', False):
-    os.chdir(sys._MEIPASS)
 
 colours = dict(
     black=(0, 0, 0),
