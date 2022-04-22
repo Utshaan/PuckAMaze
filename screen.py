@@ -23,6 +23,7 @@ colours = dict(
     light_orange=(236, 134, 87),
     perk_green=(155, 255, 0),
     turquoise=(12, 126, 158),
+    yellow_brown=(59, 58, 23),
     dark_grey=(23, 23, 23),
     dark_teal=(14, 120, 120),
     light_yellow=(255, 235, 149),

@@ -524,7 +524,7 @@ class GameState:
             self.pacman.wall_collide(visible_obstacles_2)
 
     def pause_menu(self):
-        screen.fill(colours['light_yellow'], (2*SWIDTH/10, dis_level_height + 1.275*(HEIGHT- dis_level_height)/10 - self.play_button.image.get_width()/2, 3*SWIDTH/5, 7.45*(HEIGHT- dis_level_height)/10 + self.play_button.image.get_width()))
+        screen.fill(colours['yellow_brown'], (2*SWIDTH/10, dis_level_height + 1.275*(HEIGHT- dis_level_height)/10 - self.play_button.image.get_width()/2, 3*SWIDTH/5, 7.45*(HEIGHT- dis_level_height)/10 + self.play_button.image.get_width()))
         self.button_info[2] = menu_cycle([self.resume_button, self.pause_settings_button, self.end_button], self.button_info[2])
         if self.resume_button.released:
             pg.mixer.music.fadeout(1000)
