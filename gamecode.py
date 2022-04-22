@@ -81,7 +81,6 @@ class GameState:
                     elif event.key != pg.K_RETURN:
                         if event.key not in self.prohibited_keys and len(self.player_name)<16:
                             self.player_name += event.unicode
-                            self.player_name = self.player_name.upper()
                     else:
                         if len(self.player_name) > 0 and set(self.player_name) != {' '}:
                             self.state = 'password'
@@ -124,7 +123,6 @@ class GameState:
                         elif event.key != pg.K_RETURN:
                             if event.key not in self.prohibited_keys and len(self.player_name)<16:
                                 self.player_name += event.unicode
-                                self.player_name = self.player_name.upper()
                         else:
                             if len(self.player_name) > 0 and set(self.player_name) != {' '}:
                                 self.reset_scene = 'old_p'
