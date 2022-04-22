@@ -166,6 +166,8 @@ class GameState:
                                 self.music = True
                                 self.state = 'settings'
                                 self.password_checker.update(self.player_name, self.player_passw)
+                                self.player_passw = ''
+                                self.player_name = ''
                     elif event.type == pg.KEYUP:
                         if event.key == pg.K_BACKSPACE:
                             self.backspace = False
@@ -343,7 +345,7 @@ class GameState:
         if self.backspace:
             self.player_passw = self.player_passw[:-1]
             self.backspace = False
-        passw = MONOSPACE_FONT.render(f'Passw:{self.player_passw}', 1, colours["light_orange"])
+        passw = MONOSPACE_FONT.render(f'Passw:'+'*'*len(self.player_passw), 1, colours["light_orange"])
         DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [passw], current_display)
         pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
         screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
@@ -371,7 +373,7 @@ class GameState:
             if self.backspace:
                 self.player_passw = self.player_passw[:-1]
                 self.backspace = False
-            passw = MONOSPACE_FONT.render(f'Old P:{self.player_passw}', 1, colours["light_orange"])
+            passw = MONOSPACE_FONT.render('Old P:'+'*'*len(self.player_passw), 1, colours["light_orange"])
             DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [passw], current_display)
             pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
             screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
@@ -384,7 +386,7 @@ class GameState:
             if self.backspace:
                 self.player_passw = self.player_passw[:-1]
                 self.backspace = False
-            passw = MONOSPACE_FONT.render(f'New P:{self.player_passw}', 1, colours["light_orange"])
+            passw = MONOSPACE_FONT.render('New P:'+'*'*len(self.player_passw), 1, colours["light_orange"])
             DisplayingName(SWIDTH/20, 5*SHEIGHT/12 - MONOSPACE_FONT.get_height(), [passw], current_display)
             pg.draw.lines(screen, colours['black'], True, self.name_border_points, 10)
             screen.fill(colours['dark_blue'], (self.name_border_points[0][0],self.name_border_points[0][1], 18*SWIDTH/20, MONOSPACE_FONT.get_height()))
