@@ -578,7 +578,7 @@ class GameState:
                 hhandler.update(self.pacman.score, self.player_name)
                 with open(resource_path("Assets/index.html"), "w", encoding="utf-8") as change_html:
                     change_html.write(str(hhandler.file))
-            if self.player_name != '':
+            if self.player_name != '' and self.player_passw != '':
                 with open(resource_path("Assets/passwords.json"), "w") as change_json:
                     json.dump(self.password_checker.file, change_json, indent=4)
             
