@@ -120,7 +120,6 @@ ENV/
 env.bak/
 venv.bak/
 Puckamaze_Venv
-ftp_protocol.py
 encryption_functions.py
 passwords.json
 
