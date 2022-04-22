@@ -9,12 +9,12 @@ class Ghosts(pg.sprite.Sprite):
         super().__init__(*groups)
         self.color = color
         self.image = pg.transform.scale(
-            pg.image.load(os.path.join("Assets\Images", f"ghost_{self.color}.png")),
+            pg.image.load(resource_path(f"Assets/Images/ghost_{self.color}.png")),
             (637 / 20, 673 / 20),
         ).convert_alpha()
         self.image1 = self.image
         self.image2 = pg.transform.scale(
-            pg.image.load(os.path.join("Assets\Images", f"ghost_{self.color}2.png")),
+            pg.image.load(resource_path(f"Assets/Images/ghost_{self.color}2.png")),
             (637 / 20, 673 / 20),
         ).convert_alpha()
         self.sprites = (self.image1, self.image2)

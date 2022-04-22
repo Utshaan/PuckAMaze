@@ -1,12 +1,21 @@
 import pygame as pg
+import sys
 import os
 
 pg.init()
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 WIDTH, HEIGHT = 600, 500
 SWIDTH, SHEIGHT = 750, 515
 screen = pg.display.set_mode((SWIDTH, SHEIGHT), pg.RESIZABLE)
 
+def resource_path(relative_path):
+    try:
+    # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 colours = dict(
     black=(0, 0, 0),
@@ -23,12 +32,12 @@ colours = dict(
 speed_picker = dict(red=0.8, pink=1, green=0.9)
 
 InGame_FONT = pg.font.SysFont("couriernew", 50)
-DISPLAY_FONT = pg.font.Font(os.path.join("Assets\Fonts", "PAC-FONT.TTF"), 80)
-MONOSPACE_FONT = pg.font.Font(os.path.join("Assets\Fonts", "RobotoMono-Light.ttf"), 50)
+DISPLAY_FONT = pg.font.Font(resource_path("Assets/Fonts/PAC-FONT.TTF"), 80)
+MONOSPACE_FONT = pg.font.Font(resource_path("Assets/Fonts/RobotoMono-Light.ttf"), 50)
 END_FONT = pg.font.SysFont('couriernew', 40)
 menu_name_FONT = pg.font.SysFont('couriernew', 50)
 Score_FONT = pg.font.SysFont("couriernew", 30)
-Name_FONT = pg.font.Font(os.path.join("Assets\Fonts", "RobotoMono-LightItalic.ttf"), 50)
+Name_FONT = pg.font.Font(resource_path("Assets/Fonts/RobotoMono-LightItalic.ttf"), 50)
 game_name_blink = DISPLAY_FONT.render("Mr.Pacman", 1, colours["black"])
 game_name = DISPLAY_FONT.render("Mr.Pacman", 1, colours["light_orange"])
 game_name_width, game_name_height = game_name.get_width(), game_name.get_height()
@@ -37,45 +46,45 @@ dis_level_height = dis_level.get_height()
 
 pacman_left = pg.transform.rotate(
     pg.transform.scale(
-        pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
+        pg.image.load(resource_path("Assets/Images/pacman.png")), (673 / 20, 721 / 20)
     ),
     180,
 ).convert_alpha()
 pacman_down = pg.transform.rotate(
     pg.transform.scale(
-        pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
+        pg.image.load(resource_path("Assets/Images/pacman.png")), (673 / 20, 721 / 20)
     ),
     270,
 ).convert_alpha()
 pacman_right = pg.transform.rotate(
     pg.transform.scale(
-        pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
+        pg.image.load(resource_path("Assets/Images/pacman.png")), (673 / 20, 721 / 20)
     ),
     0,
 ).convert_alpha()
 pacman_up = pg.transform.rotate(
     pg.transform.scale(
-        pg.image.load(os.path.join("Assets\Images", "pacman.png")), (673 / 20, 721 / 20)
+        pg.image.load(resource_path("Assets/Images/pacman.png")), (673 / 20, 721 / 20)
     ),
     90,
 ).convert_alpha()
 pac_close = pg.transform.scale(
-    pg.image.load(os.path.join("Assets\Images", "pacman_close.png")), (673 / 20, 721 / 20)
+    pg.image.load(resource_path("Assets/Images/pacman_close.png")), (673 / 20, 721 / 20)
 ).convert_alpha()
 pac_close_R = pg.transform.scale(
-    pg.image.load(os.path.join("Assets\Images", "pacman_close_R.png")),
+    pg.image.load(resource_path("Assets/Images/pacman_close_R.png")),
     (673 / 20, 721 / 20),
 ).convert_alpha()
-pellet_image = pg.image.load(os.path.join("Assets\Images", "pellet.png")).convert_alpha()
+pellet_image = pg.image.load(resource_path("Assets/Images/pellet.png")).convert_alpha()
 pacman_init_image = pg.transform.rotate(
     pg.transform.scale(
-        pg.image.load(os.path.join("Assets\Images", "pacman.png")), (637 / 10, 721 / 10)
+        pg.image.load(resource_path("Assets/Images/pacman.png")), (637 / 10, 721 / 10)
     ),
     180,
 ).convert_alpha()
 pacman_init_close = pg.transform.rotate(
     pg.transform.scale(
-        pg.image.load(os.path.join("Assets\Images", "pacman_close.png")),
+        pg.image.load(resource_path("Assets/Images/pacman_close.png")),
         (637 / 10, 721 / 10),
     ),
     180,
