@@ -122,6 +122,7 @@ venv.bak/
 Puckamaze_Venv
 encryption_functions.py
 passwords.json
+Assets/index.html
 
 # Spyder project settings
 .spyderproject
