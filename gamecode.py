@@ -1,4 +1,5 @@
 from screen import *
+from ftp_protocol import update_site
 from pacman import Pacman
 from display_words import DisplayingName
 from time import time, sleep
@@ -39,7 +40,7 @@ class GameState:
         self.prohibited_keys = (pg.K_ESCAPE, pg.K_TAB, pg.K_SPACE)
         self.t_original = 0
         self.name_condition_singlepress = False
-        with open('Assets/passwords.json') as file:
+        with open(resource_path('Assets/passwords.json')) as file:
             self.password_checker = JSON_handler(file)
 
     def scene_manager(self) -> None:
@@ -49,11 +50,11 @@ class GameState:
             if event.type == END_MUSIC:
                 match self.state:
                     case 'level 1':
-                        pg.mixer.music.load(os.path.join("Assets\Music", "game_music.wav"))
+                        pg.mixer.music.load(resource_path("Assets/Music/game_music.wav"))
                     case 'finish':
-                        pg.mixer.music.load(os.path.join("Assets\Music", "Track 3.wav"))
+                        pg.mixer.music.load(resource_path("Assets/Music/Track 3.wav"))
                     case _:
-                        pg.mixer.music.load(os.path.join("Assets\Music", "Funk in G Major.wav"))
+                        pg.mixer.music.load(resource_path("Assets/Music/Funk in G Major.wav"))
                 pg.mixer.music.play(-1)
 
             elif event.type == pg.KEYUP and event.key == pg.K_ESCAPE and self.state == 'level 1':
@@ -177,7 +178,7 @@ class GameState:
             case 'start_menu':
                 if self.music:
                     pg.mixer.music.fadeout(1000)
-                    pg.mixer.music.load(os.path.join("Assets\Music", "Funk in G Major.wav"))
+                    pg.mixer.music.load(resource_path("Assets/Music/Funk in G Major.wav"))
                     pg.mixer.music.play(-1)
                     self.music = False
                 self.start_menu()
@@ -567,13 +568,15 @@ class GameState:
         multiple_displays.draw(screen)
         if pg.key.get_pressed()[pg.K_ESCAPE]:
             if self.player_name != '' and self.pacman.score != 0:
-                with open("index.html") as htmlFile:
+                with open(resource_path("Assets/index.html")) as htmlFile:
                     hhandler = Html_handler(htmlFile)
                 hhandler.update(self.pacman.score, self.player_name)
-                with open("index.html", "w", encoding="utf-8") as change_html:
+                with open(resource_path("Assets/index.html"), "w", encoding="utf-8") as change_html:
                     change_html.write(str(hhandler.file))
             if self.player_name != '':
-                with open("Assets/passwords.json", "w") as change_json:
+                with open(resource_path("Assets/passwords.json"), "w") as change_json:
                     json.dump(self.password_checker.file, change_json, indent=4)
+            
+            update_site()
 
             self.run = False
