@@ -126,3 +126,4 @@ shuffle_list = (" ", " ", " ", " ", "v", "h", "v", "h")
 
 END_MUSIC = pg.USEREVENT_DROPFILE + 314
 pg.mixer.music.set_endevent(END_MUSIC)
+debug = False

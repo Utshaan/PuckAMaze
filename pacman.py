@@ -22,6 +22,7 @@ class Pacman(pg.sprite.Sprite):
         self.limit = (0, 0, SWIDTH, SHEIGHT)
         self.direction = pg.math.Vector2()
         self.temp_switch = False
+        self.debug = debug
 
     def move_direction(self, direction) -> None:
         self.rect.x += 20*direction[0]
@@ -61,6 +62,8 @@ class Pacman(pg.sprite.Sprite):
             if self.current_image >= len(self.sprites):
                 self.current_image = 0
             self.image = self.sprites[int(self.current_image)]
+        if self.debug:
+            pg.draw.rect(screen, colours['perk_green'], self.rect)
 
     def get_score(self, group) -> None:
         """Checks if the object has collided with any other object and increments the score by one.
@@ -101,7 +104,7 @@ class Pacman(pg.sprite.Sprite):
                     self.rect.bottom = sprite.rect.top
 
     def ghost_collide(self) -> None:
-        return pg.sprite.groupcollide(pacman_group, ghosts_group, False, False, collided=pg.sprite.collide_rect_ratio(0.8))
+        return pg.sprite.groupcollide(pacman_group, ghosts_group, False, False, collided=pg.sprite.collide_rect_ratio(0.88))
 
     def control(self) -> None:
         """checks for all controls. needs no inputs"""
