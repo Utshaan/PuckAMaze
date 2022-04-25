@@ -2,12 +2,6 @@ import pygame as pg
 import sys
 import os
 
-pg.init()
-
-WIDTH, HEIGHT = 600, 500
-SWIDTH, SHEIGHT = 750, 515
-screen = pg.display.set_mode((SWIDTH, SHEIGHT), pg.RESIZABLE)
-
 def resource_path(relative_path):
     try:
     # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -16,6 +10,16 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
+
+pg.init()
+
+WIDTH, HEIGHT = 600, 500
+SWIDTH, SHEIGHT = 750, 515
+icon = pg.image.load(resource_path("Assets/Images/icon.png"))
+screen = pg.display.set_mode((SWIDTH, SHEIGHT), pg.RESIZABLE)
+pg.display.set_icon(icon)
+pg.display.set_caption("Puckamaze")
+
 
 colours = dict(
     black=(0, 0, 0),

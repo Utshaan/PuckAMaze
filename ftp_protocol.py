@@ -12,7 +12,7 @@ def login_ftp():
     max_tries = 15
     while not done and max_tries > 0:
         try:
-            ftp_manager = FTP(url, Clyde_decrypt(username), Clyde_decrypt(password))
+            ftp_manager = FTP(url, Clyde_decrypt(username), Clyde_decrypt(password), timeout=60*5)
             done = True
         except Exception as e:
             max_tries -=1
