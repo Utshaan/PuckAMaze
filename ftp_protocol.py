@@ -14,9 +14,11 @@ def login_ftp():
         try:
             ftp_manager = FTP(url, Clyde_decrypt(username), Clyde_decrypt(password), timeout=60*5)
             done = True
+            return True
         except Exception as e:
             max_tries -=1
             print(f"Error: {e}")
+            return False
     
 
 def quit_ftp():

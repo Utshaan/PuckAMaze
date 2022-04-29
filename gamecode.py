@@ -41,9 +41,9 @@ class GameState:
         self.t_original = 0
         self.name_condition_singlepress = False
         self.pacman.debug = False
-        login_ftp()
-        ftp_get_siteData()
-        quit_ftp()
+        if login_ftp():
+            ftp_get_siteData()
+            quit_ftp()
         with open(resource_path('Assets/passwords.json')) as file:
             self.password_checker = JSON_handler(file)
 
@@ -582,19 +582,19 @@ class GameState:
         multiple_displays.update(speed = 0)
         multiple_displays.draw(screen)
         if pg.key.get_pressed()[pg.K_ESCAPE]:
-            login_ftp()
-            ftp_get_siteData()
-            if self.player_name != '' and self.pacman.score != 0:
-                with open(resource_path("Assets/index.html")) as htmlFile:
-                    hhandler = Html_handler(htmlFile)
-                hhandler.update(self.pacman.score, self.player_name)
-                with open(resource_path("Assets/index.html"), "w", encoding="utf-8") as change_html:
-                    change_html.write(str(hhandler.file))
-            if self.player_name != '' and self.player_passw != '':
-                with open(resource_path("Assets/passwords.json"), "w") as change_json:
-                    json.dump(self.password_checker.file, change_json, indent=4)
+            if login_ftp():
+                ftp_get_siteData()
+                if self.player_name != '' and self.pacman.score != 0:
+                    with open(resource_path("Assets/index.html")) as htmlFile:
+                        hhandler = Html_handler(htmlFile)
+                    hhandler.update(self.pacman.score, self.player_name)
+                    with open(resource_path("Assets/index.html"), "w", encoding="utf-8") as change_html:
+                        change_html.write(str(hhandler.file))
+                if self.player_name != '' and self.player_passw != '':
+                    with open(resource_path("Assets/passwords.json"), "w") as change_json:
+                        json.dump(self.password_checker.file, change_json, indent=4)
 
-            ftp_update_site()
-            quit_ftp()
+                ftp_update_site()
+                quit_ftp()
 
             self.run = False

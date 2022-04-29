@@ -104,7 +104,7 @@ class Pacman(pg.sprite.Sprite):
                     self.rect.bottom = sprite.rect.top
 
     def ghost_collide(self) -> None:
-        return pg.sprite.groupcollide(pacman_group, ghosts_group, False, False, collided=pg.sprite.collide_rect_ratio(0.88))
+        return pg.sprite.groupcollide(pacman_group, ghosts_group, False, False, collided=pg.sprite.collide_rect_ratio(0.9))
 
     def control(self) -> None:
         """checks for all controls. needs no inputs"""
