@@ -40,9 +40,10 @@ class GameState:
         self.prohibited_keys = (pg.K_ESCAPE, pg.K_TAB, pg.K_SPACE)
         self.t_original = 0
         self.name_condition_singlepress = False
-        login_ftp()
-        ftp_get_siteData()
-        quit_ftp()
+        self.pacman.debug = False
+        if login_ftp():
+            ftp_get_siteData()
+            quit_ftp()
         with open(resource_path('Assets/passwords.json')) as file:
             self.password_checker = JSON_handler(file)
 
@@ -59,7 +60,11 @@ class GameState:
                     case _:
                         pg.mixer.music.load(resource_path("Assets/Music/Funk in G Major.wav"))
                 pg.mixer.music.play(-1)
-
+            elif event.type == pg.KEYDOWN and event.key == pg.K_TAB:
+                self.pacman.debug = True
+                if self.state == 'level 1':
+                    for ghosts in ghosts_group.sprites():
+                        ghosts.debug = True
             elif event.type == pg.KEYUP and event.key == pg.K_ESCAPE and self.state == 'level 1':
                 self.music = True
                 self.revertable_state, self.state = self.state, self.revertable_state
@@ -173,6 +178,13 @@ class GameState:
                             self.backspace = False
                             self.delayed_backspace = False
                             self.t_original=0
+            elif event.type == pg.KEYUP and event.key == pg.K_TAB:
+                self.pacman.debug = False
+                if self.state == 'level 1':
+                    for ghosts in ghosts_group.sprites():
+                        ghosts.debug = False
+                
+
         match self.state:
             case "initialisation":
                 self.initialisation()
@@ -570,19 +582,19 @@ class GameState:
         multiple_displays.update(speed = 0)
         multiple_displays.draw(screen)
         if pg.key.get_pressed()[pg.K_ESCAPE]:
-            login_ftp()
-            ftp_get_siteData()
-            if self.player_name != '' and self.pacman.score != 0:
-                with open(resource_path("Assets/index.html")) as htmlFile:
-                    hhandler = Html_handler(htmlFile)
-                hhandler.update(self.pacman.score, self.player_name)
-                with open(resource_path("Assets/index.html"), "w", encoding="utf-8") as change_html:
-                    change_html.write(str(hhandler.file))
-            if self.player_name != '' and self.player_passw != '':
-                with open(resource_path("Assets/passwords.json"), "w") as change_json:
-                    json.dump(self.password_checker.file, change_json, indent=4)
-            
-            ftp_update_site()
-            quit_ftp()
+            if login_ftp():
+                ftp_get_siteData()
+                if self.player_name != '' and self.pacman.score != 0:
+                    with open(resource_path("Assets/index.html")) as htmlFile:
+                        hhandler = Html_handler(htmlFile)
+                    hhandler.update(self.pacman.score, self.player_name)
+                    with open(resource_path("Assets/index.html"), "w", encoding="utf-8") as change_html:
+                        change_html.write(str(hhandler.file))
+                if self.player_name != '' and self.player_passw != '':
+                    with open(resource_path("Assets/passwords.json"), "w") as change_json:
+                        json.dump(self.password_checker.file, change_json, indent=4)
+
+                ftp_update_site()
+                quit_ftp()
 
             self.run = False

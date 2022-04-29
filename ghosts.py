@@ -25,6 +25,7 @@ class Ghosts(pg.sprite.Sprite):
         self.path = []
         self.collision_rects = []
         self.current_image = 0
+        self.debug = debug
 
     def findpath(self, map, pos):
         grid = Grid(matrix=map)
@@ -95,3 +96,5 @@ class Ghosts(pg.sprite.Sprite):
         if self.current_image >= len(self.sprites):
             self.current_image = 0
         self.image = self.sprites[int(self.current_image)]
+        if self.debug:
+            pg.draw.rect(screen, self.color, self.rect)
